@@ -10,6 +10,7 @@ import { ElementConfig } from '../script/models';
 
 interface ShroomEditorProps {
     index: number;
+    // eslint-disable-next-line  @typescript-eslint/no-explicit-any
     game: any;
     eConfig: ElementConfig;
     updateGame: () => void;

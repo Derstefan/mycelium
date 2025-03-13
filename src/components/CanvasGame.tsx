@@ -21,7 +21,10 @@ declare global {
 
 const CanvasGame: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  // eslint-disable-next-line  @typescript-eslint/no-explicit-any
   const [game, setGame] = useState<any>(null);
+  // eslint-disable-next-line  @typescript-eslint/no-explicit-any
   const [eConfig, setEConfig] = useState<any>(null);
   const [updateCount, setUpdateCount] = useState(0);
 
@@ -35,6 +38,7 @@ const CanvasGame: React.FC = () => {
     if (!canvasRef.current) return;
     const WIDTH = 121;
     const HEIGHT = 121;
+    // eslint-disable-next-line  @typescript-eslint/no-explicit-any
     let localEConfig: any, sConfig: any, localGame: any, startPositions: any, viewer: any;
 
     function init() {
@@ -112,15 +116,18 @@ const CanvasGame: React.FC = () => {
       </div>
 
       <div id="shroomsContainer" className="mt-4">
-        {game && eConfig && game.shroomsConfig.shrooms.map((_: any, index: number) => (
-          <ShroomEditor
-            key={`${updateCount}-${index}`}
-            index={index}
-            game={game}
-            eConfig={eConfig}
-            updateGame={updateGame}
-          />
-        ))}
+
+        {game && eConfig &&
+          // eslint-disable-next-line  @typescript-eslint/no-explicit-any
+          game.shroomsConfig.shrooms.map((_: any, index: number) => (
+            <ShroomEditor
+              key={`${updateCount}-${index}`}
+              index={index}
+              game={game}
+              eConfig={eConfig}
+              updateGame={updateGame}
+            />
+          ))}
       </div>
     </div>
   );

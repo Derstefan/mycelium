@@ -2,7 +2,6 @@
 "use client";
 
 import BattleSimulator from "@/src/components/BattleSimulator";
-import RandomShroomsList from "@/src/components/RandomShroomList";
 import { ElementConfig } from "@/src/script/models";
 
 
