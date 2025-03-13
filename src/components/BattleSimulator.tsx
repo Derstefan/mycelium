@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from 'react';
-import { decodeRuleSetCompact, generateRuleSetByIndex } from '../script/rules';
+import { generateRuleSetByIndex } from '../script/rules';
 import { Viewer } from '../script/view';
 import { Game } from '../script/game';
 import { ElementConfig } from '../script/models';

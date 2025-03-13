@@ -2,9 +2,9 @@
 
 import React, { useMemo, useState } from 'react';
 import ShroomDisplay from './ShroomDisplay';
-import { ElementConfig, ShroomsConfig } from '../script/models';
+import { ElementConfig } from '../script/models';
 import { encodeRuleSetCompact, generateRuleSetByIndex } from '../script/rules';
-import { createSeededRandom, generateSeededColor } from '../script/utils';
+import { generateSeededColor } from '../script/utils';
 
 interface ShroomsListProps {
     count?: number;

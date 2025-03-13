@@ -8,7 +8,7 @@ const WOOD_AGE = 15; // Alter, ab dem ein Shroom nicht mehr wächst
 const DIE_AGE = 33405;
 
 const INDICATOR_RADIUS = 5;
-const INDICATOR_COLOR = "rgba(0, 255, 0, 0.1)";
+//const INDICATOR_COLOR = "rgba(0, 255, 0, 0.1)";
 
 const stepsPerTurn = 1;
 

@@ -1,11 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState } from 'react';
-import { decodeRuleSetCompact, encodeRuleSetCompact } from '../script/rules';
+import { decodeRuleSetCompact } from '../script/rules';
 import { Viewer } from '../script/view';
 import { Game } from '../script/game';
 import { ElementConfig } from '../script/models';
-import { useRouter } from 'next/navigation';
 import { generateSeededColor } from '../script/utils';
 
 interface ShroomDisplayProps {

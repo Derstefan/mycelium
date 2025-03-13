@@ -137,7 +137,8 @@ function bigIntFromBase36(str) {
   }
   return result;
 }
-// Encodes a RuleSet into a compact string
+// Encodes a RuleSet into a compact string 
+
 export function encodeRuleSetCompact(ruleSet) {
   if (ruleSet.length === 0) {
     return "0:0:0";
