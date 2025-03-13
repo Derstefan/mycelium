@@ -13,6 +13,11 @@ interface BattleSimulatorProps {
     eConfig: ElementConfig;
 }
 
+const gridSize = 121;
+const offset = 30;
+
+type Position = { x: number; y: number };
+
 const BattleSimulator: React.FC<BattleSimulatorProps> = ({ shroomIndex1, shroomIndex2, eConfig }) => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const chartRef = useRef<HTMLCanvasElement>(null);
@@ -40,6 +45,36 @@ const BattleSimulator: React.FC<BattleSimulatorProps> = ({ shroomIndex1, shroomI
     // Refs for input fields
     const sliderInput1Ref = useRef<HTMLInputElement>(null);
     const sliderInput2Ref = useRef<HTMLInputElement>(null);
+
+    // New state for starting position type
+    const [positionType, setPositionType] = useState<'diagonal' | 'stacked' | 'random'>('diagonal');
+
+    // Helper: get starting positions based on selection.
+    const getStartPositions = (): [Position, Position] => {
+        if (positionType === 'diagonal') {
+            return [
+                { x: offset, y: offset },
+                { x: gridSize - offset, y: gridSize - offset }
+            ];
+        } else if (positionType === 'stacked') {
+            const center = Math.floor(gridSize / 2);
+            return [
+                { x: center, y: center - offset },
+                { x: center, y: center + offset }
+            ];
+        } else if (positionType === 'random') {
+            const randomPos = (): Position => ({
+                x: Math.floor(Math.random() * (gridSize - 2 * offset)) + offset,
+                y: Math.floor(Math.random() * (gridSize - 2 * offset)) + offset
+            });
+            return [randomPos(), randomPos()];
+        }
+        // Fallback: diagonal
+        return [
+            { x: offset, y: offset },
+            { x: gridSize - offset, y: gridSize - offset }
+        ];
+    };
 
     // Function to run one simulation step
     const runSimulation = () => {
@@ -86,48 +121,68 @@ const BattleSimulator: React.FC<BattleSimulatorProps> = ({ shroomIndex1, shroomI
     };
 
     // Reset simulation logic to update indexes/colors and clear data.
-    const handleReset = () => {
+    // Optionally accepts newIndex1/newIndex2 for a fresh reset.
+    const handleReset = (newIndex1?: number, newIndex2?: number) => {
         if (!gameRef.current) {
             console.warn('Game not initialized yet!');
             return;
         }
-        // Reset: stop simulation, update colors and indexes, clear counts/chartData.
         stopSimulation();
+        if (newIndex1 !== undefined && newIndex2 !== undefined) {
+            setShroomColor1(generateSeededColor(newIndex1));
+            setShroomColor2(generateSeededColor(newIndex2));
+            setIndex1(newIndex1);
+            setIndex2(newIndex2);
+        } else {
+            setShroomColor1(generateSeededColor(sliderIndex1));
+            setShroomColor2(generateSeededColor(sliderIndex2));
+            setIndex1(sliderIndex1);
+            setIndex2(sliderIndex2);
+        }
         gameRef.current.cleanData();
-        gameRef.current.shroomStartValues([{ x: 10, y: 10 }, { x: 109, y: 109 }]);
-        setShroomColor1(generateSeededColor(sliderIndex1));
-        setShroomColor2(generateSeededColor(sliderIndex2));
-        setIndex1(sliderIndex1);
-        setIndex2(sliderIndex2);
+        gameRef.current.shroomStartValues(getStartPositions());
         setCounts({ shroom1: [], shroom2: [] });
         chartData.current = [];
         viewerRef.current?.render();
-
         gameRef.current.count();
     };
 
+    // New: Randomize the shroomIndexes using dice emoji button.
+    const handleRandomizeIndexes = () => {
+        const random1 = Math.floor(Math.random() * 12188);
+        const random2 = Math.floor(Math.random() * 12188);
+        setSliderIndex1(random1);
+        setSliderIndex2(random2);
+        handleReset(random1, random2);
+    };
+
+    // Handle key events for input fields: Enter resets and arrow keys switch focus.
     const handleInputKeyDown = (
         e: React.KeyboardEvent<HTMLInputElement>,
         field: 'slider1' | 'slider2'
     ) => {
         if (e.key === 'Enter') {
             handleReset();
-        } else if (field === 'slider1' && (e.key === 'ArrowDown')) {
+        } else if (field === 'slider1' && e.key === 'ArrowDown') {
             sliderInput2Ref.current?.focus();
-        } else if (field === 'slider2' && (e.key === 'ArrowUp')) {
+        } else if (field === 'slider2' && e.key === 'ArrowUp') {
             sliderInput1Ref.current?.focus();
         }
     };
 
-    // Initialize game and viewer when indexes, colors, or config change.
+    // When position type changes, update state and reset automatically.
+    const handlePositionTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        setPositionType(e.target.value as 'diagonal' | 'stacked' | 'random');
+        handleReset();
+    };
+
+    // Initialize game and viewer when indexes, colors, config, or positionType change.
     useEffect(() => {
-        // Stop any running simulation before reinitializing
         stopSimulation();
         const initGame = () => {
             const canvas = canvasRef.current;
             if (!canvas) return;
 
-            const gridSize = 121;
             const ruleSet1 = generateRuleSetByIndex(index1);
             const ruleSet2 = generateRuleSetByIndex(index2);
 
@@ -141,11 +196,7 @@ const BattleSimulator: React.FC<BattleSimulatorProps> = ({ shroomIndex1, shroomI
                 gridSize
             );
 
-            newGame.shroomStartValues([
-                { x: 10, y: 10 },
-                { x: 109, y: 109 }
-            ]);
-
+            newGame.shroomStartValues(getStartPositions());
             const newViewer = new Viewer(newGame, canvas);
             gameRef.current = newGame;
             viewerRef.current = newViewer;
@@ -162,7 +213,7 @@ const BattleSimulator: React.FC<BattleSimulatorProps> = ({ shroomIndex1, shroomI
                 clearInterval(simulationInterval.current);
             }
         };
-    }, [index1, index2, eConfig, shroomColor1, shroomColor2]);
+    }, [index1, index2, eConfig, shroomColor1, shroomColor2, positionType]);
 
     // Chart drawing function
     const drawChart = () => {
@@ -280,14 +331,12 @@ const BattleSimulator: React.FC<BattleSimulatorProps> = ({ shroomIndex1, shroomI
                 />
             </div>
             <div className="flex items-center mb-2">
-
                 <button
                     className="px-4 py-2 ml-4 text-white bg-gray-800 rounded-lg hover:bg-gray-600 transition-colors cursor-pointer"
                     onClick={handleReset}
                 >
                     reset
                 </button>
-
                 <button
                     className="px-4 py-2 ml-4 text-white bg-gray-800 rounded-lg hover:bg-gray-600 transition-colors cursor-pointer"
                     onClick={stopSimulation}
@@ -305,7 +354,6 @@ const BattleSimulator: React.FC<BattleSimulatorProps> = ({ shroomIndex1, shroomI
                 <button
                     className="px-4 py-2 ml-4 text-white bg-gray-800 rounded-lg hover:bg-gray-600 transition-colors cursor-pointer"
                     onClick={() => {
-                        // Run simulation only if it's not running.
                         if (!isSimulating) {
                             startSimulation();
                         }
@@ -317,8 +365,8 @@ const BattleSimulator: React.FC<BattleSimulatorProps> = ({ shroomIndex1, shroomI
             <div className="relative mb-4">
                 <canvas
                     ref={canvasRef}
-                    width={121}
-                    height={121}
+                    width={gridSize}
+                    height={gridSize}
                     className="border-2 border-gray-700 rounded-lg"
                 />
                 <div className="bottom-2 left-2 right-2 flex justify-between text-sm">
@@ -337,6 +385,30 @@ const BattleSimulator: React.FC<BattleSimulatorProps> = ({ shroomIndex1, shroomI
                 height={200}
                 className="border-2 border-gray-700 rounded-lg"
             />
+
+            {/* Dropdown and Random button for starting positions */}
+            <div className="mt-4 flex items-center">
+                <label htmlFor="positionType" className="text-white mr-2">
+                    start position:
+                </label>
+                <select
+                    id="positionType"
+                    value={positionType}
+                    onChange={handlePositionTypeChange}
+                    className="bg-gray-800 text-white p-1 rounded"
+                >
+                    <option value="diagonal">diagonal</option>
+                    <option value="stacked">horizontal</option>
+                    <option value="random">random</option>
+                </select>
+                <button
+                    title="Randomize Shroom Indexes"
+                    className="ml-4 text-white text-2xl hover:text-gray-400 cursor-pointer"
+                    onClick={handleRandomizeIndexes}
+                >
+                    🎲
+                </button>
+            </div>
         </div>
     );
 };
