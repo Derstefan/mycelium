@@ -36,7 +36,55 @@ export function generateRuleSet(numRules = 12, elementNumber, seed) {
   // Entferne Duplikate
   const uniqueRules = removeDuplicatesAndSort(ruleSet);
 
-  return uniqueRules;
+  //  return uniqueRules;
+  return minimizeRuleSet(uniqueRules);
+}
+
+export function minimizeRuleSet(ruleSet) {
+  return ruleSet.filter(rule =>
+    rule.fromElement !== rule.elementId
+  )
+}
+
+
+
+export function generateRuleSetByIndex(index) {
+  // Total valid indices: 3 * 4096 = 12288
+  const maxIndex = 3 * 4096; // 12288
+  if (index < 0 || index >= maxIndex) {
+    throw new Error(`Index must be between 0 and ${maxIndex - 1}.`);
+  }
+
+  // Split index into constrained part (0-2) and free part (0-4095)
+  const partA = Math.floor(index / 4096); // Determines (0,1) and (0,2)
+  const partB = index % 4096; // Controls other rules
+
+  // Set (0,1) and (0,2) based on partA
+  let sum1Bit, sum2Bit;
+  switch (partA) {
+    case 0: sum1Bit = 0; sum2Bit = 1; break; // (0, [1],0), (0, [2],1)
+    case 1: sum1Bit = 1; sum2Bit = 0; break; // (0, [1],1), (0, [2],0)
+    case 2: sum1Bit = 1; sum2Bit = 1; break; // Both set to 1
+  }
+
+  // Force (0,3) and (0,4) to always be 1
+  const constrainedBits = (sum1Bit | (sum2Bit << 1) | (1 << 2) | (1 << 3));
+
+  // Combine with free rules and invert upper 8 bits
+  let modifiedIndex = constrainedBits | (partB << 4);
+  modifiedIndex = (modifiedIndex & 0x00FF) | (~modifiedIndex & 0xFF00);
+
+  // Generate rules
+  const rules = [];
+  for (let fromElement = 0; fromElement < 2; fromElement++) {
+    for (let sum = 1; sum <= 8; sum++) {
+      const bitPosition = fromElement * 8 + (sum - 1);
+      const resultElement = (modifiedIndex >> bitPosition) & 1;
+      rules.push(new Rule(fromElement, [sum], resultElement));
+    }
+  }
+
+  return minimizeRuleSet(rules);
 }
 
 
@@ -74,6 +122,10 @@ function removeDuplicatesAndSort(rules) {
     return a.elementId - b.elementId;
   });
 }
+// Berechnet die minimale Bitanzahl, um einen Wert < maxValue abzubilden.
+function calcBitWidth(maxValue) {
+  return Math.ceil(Math.log2(maxValue));
+}
 
 // Wandelt einen Base‑36‑String in einen BigInt um.
 function bigIntFromBase36(str) {
@@ -85,88 +137,70 @@ function bigIntFromBase36(str) {
   }
   return result;
 }
-
-// Berechnet die minimale Bitanzahl, um einen Wert < maxValue abzubilden.
-function calcBitWidth(maxValue) {
-  return Math.ceil(Math.log2(maxValue));
-}
-
-
-
-/**
- * Encodiert ein Array von Rule-Objekten in eine kompakte Zeichenkette.
- * Annahme: Es gilt
- *   index = rule.fromElement * (n * 9ⁿ) + bValue * n + rule.elementId,
- * wobei bValue aus rule.elementSums (Länge n) gebildet wird.
- * Insgesamt gibt es n³ * 9ⁿ Möglichkeiten.
- */
-export function encodeRuleSetCompact(ruleSet, n = 1) {
-  const totalPossibilities = n ** 3 * (9 ** n); // Gesamtzahl möglicher Indizes
+// Encodes a RuleSet into a compact string
+export function encodeRuleSetCompact(ruleSet) {
+  if (ruleSet.length === 0) {
+    return "0:0:0";
+  }
+  const n = ruleSet[0].elementSums.length;
+  for (const rule of ruleSet) {
+    if (rule.elementSums.length !== n) {
+      throw new Error("All rules must have elementSums of the same length");
+    }
+  }
+  const totalPossibilities = (n + 1) ** 2 * (9 ** n);
   const bitWidth = calcBitWidth(totalPossibilities);
 
   const indicesSet = [];
   for (const rule of ruleSet) {
-    if (rule.elementSums.length !== n) {
-      throw new Error("elementSums muss genau n Elemente enthalten");
-    }
-    // Berechne bValue aus dem Array elementSums
     let bValue = 0;
     for (let i = 0; i < n; i++) {
       bValue = bValue * 9 + rule.elementSums[i];
     }
-    // Berechne den Index anhand der Formel
-    const index = rule.fromElement * (n * (9 ** n)) + bValue * n + rule.elementId;
+    const index = rule.fromElement * (9 ** n) * (n + 1) + bValue * (n + 1) + rule.elementId;
     indicesSet.push(index);
   }
 
   const ruleCount = indicesSet.length;
   let packed = 0n;
-  // Packe alle Indizes in einen BigInt, indem jeweils bitWidth-Bits verschoben und hinzugefügt werden.
   for (const index of indicesSet) {
     packed = (packed << BigInt(bitWidth)) | BigInt(index);
   }
 
-  // Erzeuge den Ausgabe-String: n:AnzahlRegeln:Base36-kodierter Wert
   return `${n}:${ruleCount}:${packed.toString(36)}`;
 }
 
-/**
- * Dekodiert den kompakten String zurück in ein Array von Rule-Objekten.
- * Dabei wird der Base‑36‑String über die Funktion bigIntFromBase36 korrekt in einen BigInt umgewandelt.
- */
+// Decodes a compact string back into a RuleSet
 export function decodeRuleSetCompact(id) {
   const parts = id.split(":");
-  if (parts.length !== 3) throw new Error("Ungültiges ID-Format");
+  if (parts.length !== 3) throw new Error("Invalid ID format");
   const n = parseInt(parts[0], 10);
   const ruleCount = parseInt(parts[1], 10);
   const encoded = parts[2];
 
-  const totalPossibilities = n ** 3 * (9 ** n);
+  const totalPossibilities = (n + 1) ** 2 * (9 ** n);
   const bitWidth = calcBitWidth(totalPossibilities);
 
-  // Umwandlung des Base‑36‑Strings in einen BigInt ohne Präzisionsverlust
   const packed = bigIntFromBase36(encoded);
 
   const indices = [];
   let tempPacked = packed;
   const mask = (1n << BigInt(bitWidth)) - 1n;
-  // Extrahiere die einzelnen Indizes (in umgekehrter Reihenfolge)
   for (let i = 0; i < ruleCount; i++) {
     indices.unshift(Number(tempPacked & mask));
     tempPacked = tempPacked >> BigInt(bitWidth);
   }
 
   const rules = [];
-  const factor = n * (9 ** n);
-  // Zerlege jeden Index in die ursprünglichen Bestandteile
+  const factor = (9 ** n) * (n + 1);
   for (const index of indices) {
     const a = Math.floor(index / factor);
     const rem = index % factor;
-    const bValue = Math.floor(rem / n);
-    const c = rem % n;
+    const bValue = Math.floor(rem / (n + 1));
+    const c = rem % (n + 1);
+
     const bArray = [];
     let temp = bValue;
-    // Zerlege bValue zurück in ein Array mit Länge n (Elemente zwischen 0 und 8)
     for (let i = 0; i < n; i++) {
       bArray.unshift(temp % 9);
       temp = Math.floor(temp / 9);
@@ -176,5 +210,3 @@ export function decodeRuleSetCompact(id) {
 
   return rules;
 }
-
-

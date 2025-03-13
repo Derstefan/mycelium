@@ -1,14 +1,13 @@
 "use client"
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { ElementConfig } from '../script/models';
 import { ShroomsConfig } from '../script/models';
 import { Game } from '../script/game';
 import { Viewer } from '../script/view';
 import { Field } from '../script/models';
 import { setStartValues } from '../script/utils';
-
-
+import ShroomEditor from './ShroomEditor';
 
 // Erweiterung des globalen Window-Objekts um die benötigten Funktionen
 declare global {
@@ -22,87 +21,107 @@ declare global {
 
 const CanvasGame: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [game, setGame] = useState<any>(null);
+  const [eConfig, setEConfig] = useState<any>(null);
+  const [updateCount, setUpdateCount] = useState(0);
+
+  // Hilfsfunktion, um ein Re-Rendering zu erzwingen
+  const updateGame = () => setUpdateCount(c => c + 1);
 
   useEffect(() => {
+
+    if (typeof window === 'undefined') return;
+
     if (!canvasRef.current) return;
-    let eConfig: any, sConfig: any, game: any, startPositions: any, viewer: any;
     const WIDTH = 121;
     const HEIGHT = 121;
+    let localEConfig: any, sConfig: any, localGame: any, startPositions: any, viewer: any;
 
-    // Initialisierungsfunktion gemäß der Original-Logik
     function init() {
-      eConfig = new ElementConfig(1);
-      sConfig = new ShroomsConfig(eConfig.allElements, 4, 60);
+      localEConfig = new ElementConfig(1, "dyrk");
+      sConfig = new ShroomsConfig(localEConfig.allElements, 4, 60);
       startPositions = setStartValues(sConfig.shrooms.length, WIDTH, HEIGHT);
-      game = new Game(eConfig, sConfig, WIDTH, HEIGHT);
+      localGame = new Game(localEConfig, sConfig, WIDTH, HEIGHT);
 
-      // Übergabe des Canvas-Elements per Ref
-      viewer = new Viewer(game, canvasRef.current);
-      game.shroomStartValues(startPositions);
+      // Übergabe des Canvas per Ref
+      viewer = new Viewer(localGame, canvasRef.current);
+      localGame.shroomStartValues(startPositions);
 
-      game.setViewer(viewer);
+      localGame.setViewer(viewer);
       viewer.render();
       viewer.updateTurnDisplay();
-      //  initShroomsUI();
+
+      // Setze den State neu, damit ein Re-Render erfolgt
+      setGame(localGame);
+      setEConfig(localEConfig);
+      updateGame();
     }
 
-    // Beispiel-Funktionen für die Button-Aktionen
     function resetCells() {
       for (let i = 0; i < WIDTH; i++) {
         for (let j = 0; j < HEIGHT; j++) {
-          game.data[i][j] = new Field(0, null);
+          localGame.data[i][j] = new Field(0, null);
         }
       }
-      game.shroomStartValues(startPositions);
-      viewer.render(game);
+      localGame.shroomStartValues(startPositions);
+      viewer.render(localGame);
     }
 
     function evolveAllShroomsAndRender() {
-      game.evolveAllShrooms();
-      viewer.render(game);
+      localGame.evolveAllShrooms();
+      viewer.render(localGame);
     }
 
     function reset() {
       init();
     }
 
-    // Initialisierung beim Mounten der Komponente
     init();
 
-    // Funktionen global verfügbar machen, damit sie in den onClick-Handlern genutzt werden können
     window.resetCells = resetCells;
     window.evolveAllShroomsAndRender = evolveAllShroomsAndRender;
     window.reset = reset;
   }, []);
 
   return (
-    <div className="p-4">
+    <div className="min-h-screen flex flex-col items-center justify-center p-4">
+      {/* Haupt-Canvas */}
       <div id="canvas-container" className="mt-2">
-        <canvas ref={canvasRef} />
+        <canvas ref={canvasRef} className="border" />
       </div>
-      {/* <div id="currentShroomDisplay" />*/}
-      <div id="sCount" />
+      <div id="sCount" className="mt-2" />
       <div className="button-container mt-4 space-x-2">
         <button
-          onClick={() => window.reset()}
-          className="text-gray-900 bg-white border border-gray-300 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-100 font-medium rounded-lg text-sm px-5 py-2.5"
+          onClick={() => window.reset && window.reset()}
+          className="text-gray-900 bg-white border border-gray-300 rounded-lg text-sm px-5 py-2.5 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-100"
         >
           new
         </button>
         <button
-          onClick={() => window.evolveAllShroomsAndRender()}
-          className="text-gray-900 bg-white border border-gray-300 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-100 font-medium rounded-lg text-sm px-5 py-2.5"
+          onClick={() => window.evolveAllShroomsAndRender && window.evolveAllShroomsAndRender()}
+          className="text-gray-900 bg-white border border-gray-300 rounded-lg text-sm px-5 py-2.5 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-100"
         >
           evolve
         </button>
         <button
-          onClick={() => window.resetCells()}
-          className="text-gray-900 bg-white border border-gray-300 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-100 font-medium rounded-lg text-sm px-5 py-2.5"
+          onClick={() => window.resetCells && window.resetCells()}
+          className="text-gray-900 bg-white border border-gray-300 rounded-lg text-sm px-5 py-2.5 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-100"
         >
           reset
         </button>
       </div>
-      <div id="shroomsContainer" className="flex flex-col items-start justify-center mt-4"></div>
+
+      <div id="shroomsContainer" className="mt-4">
+        {game && eConfig && game.shroomsConfig.shrooms.map((_: any, index: number) => (
+          <ShroomEditor
+            key={`${updateCount}-${index}`}
+            index={index}
+            game={game}
+            eConfig={eConfig}
+            updateGame={updateGame}
+          />
+        ))}
+      </div>
     </div>
   );
 };

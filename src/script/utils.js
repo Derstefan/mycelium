@@ -8,14 +8,20 @@ export function generateRandomColors(count, seed) {
 
 
 
-export function generateSeededColor(seed) {
+export function generateSeededColor(seed, darker = false) {
   if (seed === undefined || seed === null) {
     seed = Math.random() + "";
   }
   const seededRandom = createSeededRandom(seed);
-  return '#' + Math.floor(seededRandom() * 16777215)
-    .toString(16)
-    .padStart(6, '0');
+  if (!darker) {
+    return '#' + Math.floor(seededRandom() * 16777215)
+      .toString(16)
+      .padStart(6, '0');
+  } else {
+    return '#' + Math.floor(seededRandom() * 16777215 / 2)
+      .toString(16)
+      .padStart(6, '0');
+  }
 }
 
 export function setStartValues(length, w, h, seed) {

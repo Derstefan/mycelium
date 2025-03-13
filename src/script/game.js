@@ -17,13 +17,11 @@ export class Game {
   constructor(elementConfig, shroomsConfig, WIDTH, HEIGHT) {
     this.WIDTH = WIDTH;
     this.HEIGHT = HEIGHT;
-    this.elements = elementConfig.elements;
-    this.allElements = elementConfig.allElements;
-    this.shrooms = shroomsConfig.shrooms;
-    this.shroomColors = shroomsConfig.shroomColors;
+    this.elementConfig = elementConfig;
+    this.shroomsConfig = shroomsConfig;
 
     // Spielstatus und Steuerung
-    this.isBot = [false].concat(new Array(this.shrooms.length - 1).fill(true));
+    this.isBot = [false].concat(new Array(shroomsConfig.shrooms.length - 1).fill(true));
     this.currentShroom = 0;
     this.stepsInCurrentTurn = 0;
     this.botCurrentPosition = null;
@@ -42,7 +40,7 @@ export class Game {
 
   evolveAllShrooms(times = 1) {
     for (let j = 0; j < times; j++) {
-      for (let i = 0; i < this.shrooms.length; i++) {
+      for (let i = 0; i < this.shroomsConfig.shrooms.length; i++) {
         this.evolveAll(i);
         // console.log("Shroom " + i + " evolved");
       }
@@ -50,7 +48,7 @@ export class Game {
   }
 
   resetCount() {
-    this.sCount = new Array(this.shroomColors.length).fill(0);
+    this.sCount = new Array(this.shroomsConfig.shroomColors.length).fill(0);
   }
 
   cleanData() {
@@ -71,9 +69,13 @@ export class Game {
 
   shroomStartValue(x, y, shroomId) {
     this.data[x - 1][y] = new Field(1, shroomId);
+
     this.data[x + 1][y] = new Field(1, shroomId);
+
     this.data[x][y - 1] = new Field(1, shroomId);
+
     this.data[x][y + 1] = new Field(1, shroomId);
+
   }
 
 
@@ -237,18 +239,19 @@ export class Game {
       }
     }
     // Berechne die Summen für jedes Element
-    const sums = new Array(this.elements.length - 1).fill(0);
+    const sums = new Array(this.elementConfig.elements.length - 1).fill(0);
     aroundValues.forEach(val => val > 0 && sums[val - 1]++);
 
     // Bestimme die anzuwendende Regel
     const rule = this.getRuleByShroom(this.data[x][y].element, sums, shroomId);
 
-    const field = rule
-      ? new Field(rule.elementId, shroomId)
-      : this.data[x][y];
-    field.age = isOwnShroom ? age + 1 : 0;
-
-    return field;
+    if (rule) {
+      const field = new Field(rule.elementId, shroomId);
+      field.age = isOwnShroom ? age + 1 : 0;
+      return field;
+    }
+    this.data[x][y].age = isOwnShroom ? age + 1 : 0;
+    return this.data[x][y];
   }
 
   applyCellsUpdate(cellsUpdate) {
@@ -265,7 +268,7 @@ export class Game {
     this.stepsInCurrentTurn++;
     if (this.stepsInCurrentTurn >= stepsPerTurn) {
       this.stepsInCurrentTurn = 0;
-      this.currentShroom = (this.currentShroom + 1) % this.shrooms.length;
+      this.currentShroom = (this.currentShroom + 1) % this.shroomsConfig.shrooms.length;
       this.botCurrentPosition = null;
       if (this.viewer) {
         this.viewer.updateTurnDisplay();
@@ -278,9 +281,9 @@ export class Game {
 
   // Gibt die Regel zurück, die zum übergebenen Element-Summen-Array und Shroom entspricht
   getRuleByShroom(element, sums, shroomId) {
-    for (let i = 0; i < this.shrooms[shroomId].length; i++) {
-      if (arraysAreTheSame(this.shrooms[shroomId][i].elementSums, sums) && element === this.shrooms[shroomId][i].fromElement) {
-        return this.shrooms[shroomId][i];
+    for (let i = 0; i < this.shroomsConfig.shrooms[shroomId].length; i++) {
+      if (arraysAreTheSame(this.shroomsConfig.shrooms[shroomId][i].elementSums, sums) && element === this.shroomsConfig.shrooms[shroomId][i].fromElement) {
+        return this.shroomsConfig.shrooms[shroomId][i];
       }
     }
     return null;

@@ -31,9 +31,9 @@ export class Viewer {
     // Rendert das Spielfeld auf das Canvas
     render() {
         const data = this.game.data;
-        const shroomColors = this.game.shroomColors;
+        const shroomColors = this.game.shroomsConfig.shroomColors;
         const sCount = this.game.sCount;
-        const allElements = this.game.allElements;
+        const allElements = this.game.elementConfig.allElements;
         for (let y = 0; y < data.length; y++) {
             for (let x = 0; x < data[y].length; x++) {
                 // Zeichne zuerst die Shroom-Farben
@@ -90,7 +90,7 @@ export class Viewer {
         this.game.sCount.forEach((count, i) => {
             const span = document.createElement("span");
             span.innerText = count;
-            span.style.color = this.game.shroomColors[i];
+            span.style.color = this.game.shroomsConfig.shroomColors[i];
             countDiv.appendChild(span);
             const divider = document.createElement("span");
             divider.innerText = "|";
