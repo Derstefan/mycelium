@@ -13,6 +13,7 @@ interface ShroomDisplayProps {
     ruleEncoded: string;
     shroomColor: string;
     eConfig: ElementConfig;
+    addSelectedShroom?: (index: number) => void;
 }
 
 const gridSize = 27;
@@ -21,12 +22,11 @@ const midY = (gridSize - 1) / 2;
 const maxEvolve = 9;
 
 
-const ShroomDisplay: React.FC<ShroomDisplayProps> = ({ index, ruleEncoded, shroomColor, eConfig }) => {
+const ShroomDisplay: React.FC<ShroomDisplayProps> = ({ index, ruleEncoded, shroomColor, eConfig, addSelectedShroom }) => {
     const previewCanvasRef = useRef<HTMLCanvasElement>(null);
     const [isHovered, setIsHovered] = useState(false);
     const ruleSet = decodeRuleSetCompact(ruleEncoded);
     const [log, setLog] = useState<string>('');
-    const router = useRouter();
 
     const gameRef = useRef<Game | null>(null);
     const viewerRef = useRef<Viewer | null>(null);
@@ -146,6 +146,8 @@ const ShroomDisplay: React.FC<ShroomDisplayProps> = ({ index, ruleEncoded, shroo
                             setTimeout(() => setLog(''), 1500);
                         }}>#{index}</span>
                     <span className="text-xs text-gray-400 ml-2">{log}</span>
+                    <button className='position-right bg-gray-700 p-2 rounded-lg cursor-pointer hover:bg-gray-600 transition-colors m-2'
+                        onClick={() => addSelectedShroom ? addSelectedShroom(index) : null}>add</button>
                 </div>
                 <div className="space-y-3">
                     {Object.entries(ruleGroups).map(([transition, sums]) => (
@@ -166,10 +168,9 @@ const ShroomDisplay: React.FC<ShroomDisplayProps> = ({ index, ruleEncoded, shroo
                         </div>
                     ))}
                 </div>
-                <button className='position-right bg-gray-700 p-2 rounded-lg cursor-pointer hover:bg-gray-600 transition-colors m-2'
-                    onClick={() => router.push(`/katalog/${ruleEncoded}`)}>...more</button>
+
             </div>
-        </div>
+        </div >
     );
 };
 

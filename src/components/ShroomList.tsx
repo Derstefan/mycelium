@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import ShroomDisplay from './ShroomDisplay';
 import { ElementConfig, ShroomsConfig } from '../script/models';
 import { encodeRuleSetCompact, generateRuleSetByIndex } from '../script/rules';
@@ -17,6 +17,10 @@ const ShroomsList: React.FC<ShroomsListProps> = ({
     eConfig,
     startIndex = 0
 }) => {
+
+    const [selectedShrooms, setSelectedShrooms] = useState<number[]>([]);
+
+
     const shrooms = useMemo(() => {
         return Array.from({ length: count }, (_, i) => {
             const currentIndex = startIndex + i;
@@ -35,16 +39,26 @@ const ShroomsList: React.FC<ShroomsListProps> = ({
     }, [count, startIndex]); // Abhängigkeiten
 
     return (
-        <div className="flex flex-wrap gap-4">
-            {shrooms.map((shroom, index) => (
-                <ShroomDisplay
-                    key={startIndex + index} // Eindeutiger Key mit Index
-                    index={startIndex + index} // Globaler Index
-                    ruleEncoded={shroom.ruleEncoded}
-                    shroomColor={shroom.shroomColor}
-                    eConfig={eConfig}
-                />
-            ))}
+        <div>
+            <div className="flex flex-wrap gap-4">
+                {selectedShrooms.map((index) => <span key={index} >{index}</span>)}
+            </div>
+            <div className="flex flex-wrap gap-4">
+
+                {shrooms.map((shroom, index) => (
+                    <ShroomDisplay
+                        key={startIndex + index} // Eindeutiger Key mit Index
+                        index={startIndex + index} // Globaler Index
+                        ruleEncoded={shroom.ruleEncoded}
+                        shroomColor={shroom.shroomColor}
+                        eConfig={eConfig}
+                        addSelectedShroom={(index) => {
+                            setSelectedShrooms([...selectedShrooms, index]);
+                        }}
+
+                    />
+                ))}
+            </div>
         </div>
     );
 };
