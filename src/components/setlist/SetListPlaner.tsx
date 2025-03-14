@@ -150,7 +150,7 @@ const formatDuration = (totalSeconds: number) => {
 
 const SetlistPlanner: React.FC = () => {
     // Editierbarer Titel
-    const [title, setTitle] = useState("Glauchauer Stadtfest 2022");
+    const [title, setTitle] = useState("Glauchauer Stadtfest 2023");
 
     const [repertoire, setRepertoire] = useState<Song[]>(initialRepertoire);
     const [setlist, setSetlist] = useState<Song[]>([]);
