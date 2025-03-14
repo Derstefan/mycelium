@@ -204,10 +204,7 @@ const SetlistPlanner: React.FC = () => {
         title,
         setlist,
     }) => {
-        const totalDuration = setlist.reduce(
-            (sum, song) => sum + (song.type === 'song' ? parseDuration(song.duration) : 0),
-            0
-        );
+
 
         return (
             <div className="printable-content">
