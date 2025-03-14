@@ -31,6 +31,8 @@ const initialRepertoire: SetlistItem[] = [
             "Matze": "Klari",
             "Seppel": "Schlagzeug",
             "Steffo": "Akkordeon",
+            "MainVocal": "Mikrofon",
+            "Marc": "Bass"
         }
     },
     {
@@ -41,6 +43,9 @@ const initialRepertoire: SetlistItem[] = [
             "Matze": "Klari",
             "Seppel": "Schlagzeug",
             "Steffo": "Akkordeon",
+            "MainVocal": "Mikrofon",
+            "Marc": "Bass"
+
         }
     },
     {
@@ -51,6 +56,8 @@ const initialRepertoire: SetlistItem[] = [
             "Matze": "Klari",
             "Seppel": "Schlagzeug",
             "Steffo": "Akkordeon",
+            "MainVocal": "Mikrofon",
+            "Marc": "Bass"
         }
     },
     {
@@ -61,6 +68,8 @@ const initialRepertoire: SetlistItem[] = [
             "Matze": "Klari",
             "Seppel": "Schlagzeug",
             "Steffo": "Akkordeon",
+            "MainVocal": "Mikrofon",
+            "Marc": "Bass"
         }
     },
     {
@@ -71,6 +80,8 @@ const initialRepertoire: SetlistItem[] = [
             "Matze": "Bari",
             "Seppel": "Schlagzeug",
             "Steffo": "Akkordeon",
+            "MainVocal": "Pause",
+            "Marc": "Bass+Gesang",
         }
     },
     {
@@ -81,6 +92,9 @@ const initialRepertoire: SetlistItem[] = [
             "Matze": "Bari",
             "Seppel": "Schlagzeug",
             "Steffo": "Akkordeon",
+            "MainVocal": "Mikrofon",
+            "Marc": "Bass",
+
         }
     },
     {
@@ -91,6 +105,8 @@ const initialRepertoire: SetlistItem[] = [
             "Matze": "Bari",
             "Seppel": "Schlagzeug",
             "Steffo": "Akkordeon",
+            "MainVocal": "Pause",
+            "Marc": "Bass",
 
         }
     },
@@ -102,6 +118,8 @@ const initialRepertoire: SetlistItem[] = [
             "Matze": "Bari",
             "Seppel": "Schlagzeug",
             "Steffo": "Akkordeon",
+            "MainVocal": "Pause",
+            "Marc": "Bass"
 
         }
     },
@@ -113,6 +131,8 @@ const initialRepertoire: SetlistItem[] = [
             "Matze": "Bari",
             "Seppel": "Goc",
             "Steffo": "Posaune",
+            "MainVocal": "Mikrofon",
+            "Marc": "Gesang"
         }
     },
     {
@@ -123,6 +143,8 @@ const initialRepertoire: SetlistItem[] = [
             "Matze": "Klari",
             "Seppel": "Schlagzeug",
             "Steffo": "Akkordeon",
+            "MainVocal": "Pause",
+            "Marc": "Bass"
         }
     },
     {
@@ -133,6 +155,9 @@ const initialRepertoire: SetlistItem[] = [
             "Matze": "Klari",
             "Seppel": "Schlagzeug",
             "Steffo": "Akkordeon",
+            "MainVocal": "Mikrofon",
+            "Marc": "Bass"
+
         }
     }, {
         "name": "Sve Sto Cveta",
@@ -142,6 +167,9 @@ const initialRepertoire: SetlistItem[] = [
             "Matze": "Klari",
             "Seppel": "Schlagzeug",
             "Steffo": "Keyboard",
+            "MainVocal": "Mikrofon",
+            "Marc": "Bass"
+
         }
     },
     {
@@ -152,6 +180,8 @@ const initialRepertoire: SetlistItem[] = [
             "Matze": "Klari",
             "Seppel": "Schlagzeug",
             "Steffo": "Akkordeon",
+            "MainVocal": "Pause",
+            "Marc": "Gesang+Bass",
         }
     },
     {
@@ -162,6 +192,8 @@ const initialRepertoire: SetlistItem[] = [
             "Matze": "Klari",
             "Seppel": "Schlagzeug",
             "Steffo": "Akkordeon",
+            "MainVocal": "Mikrofon",
+            "Marc": "Bass",
         }
     },
     {
@@ -172,6 +204,8 @@ const initialRepertoire: SetlistItem[] = [
             "Matze": "Klari",
             "Seppel": "Schlagzeug",
             "Steffo": "Akkordeon",
+            "MainVocal": "Pause",
+            "Marc": "Gesang+Bass",
         }
     },
     {
@@ -182,6 +216,8 @@ const initialRepertoire: SetlistItem[] = [
             "Matze": "Bari",
             "Seppel": "Schlagzeug",
             "Steffo": "Akkordeon",
+            "MainVocal": "Mikrofon",
+            "Marc": "Bass",
         }
     },
     {
@@ -192,6 +228,8 @@ const initialRepertoire: SetlistItem[] = [
             "Matze": "Bari",
             "Seppel": "Schlagzeug",
             "Steffo": "Akkordeon",
+            "MainVocal": "Mikrofon",
+            "Marc": "Bass",
         }
     },
     {
@@ -202,6 +240,8 @@ const initialRepertoire: SetlistItem[] = [
             "Matze": "Bari",
             "Seppel": "Schlagzeug",
             "Steffo": "Posaune",
+            "MainVocal": "Pause",
+            "Marc": "Gesang",
 
         }
     },
@@ -213,6 +253,8 @@ const initialRepertoire: SetlistItem[] = [
             "Matze": "Bari",
             "Seppel": "Schlagzeug",
             "Steffo": "Akkordeon",
+            "MainVocal": "Pause",
+            "Marc": "Bass",
 
         }
     },
@@ -224,6 +266,8 @@ const initialRepertoire: SetlistItem[] = [
             "Matze": "Klari",
             "Seppel": "Goc",
             "Steffo": "Gitarre",
+            "MainVocal": "Pause",
+            "Marc": "Gesang+Bass",
         }
     },
     {
@@ -234,6 +278,8 @@ const initialRepertoire: SetlistItem[] = [
             "Matze": "Klari",
             "Seppel": "Goc",
             "Steffo": "Akkordeon",
+            "MainVocal": "Pause",
+            "Marc": "Bass",
         }
     },
     {
@@ -244,6 +290,8 @@ const initialRepertoire: SetlistItem[] = [
             "Matze": "Klari",
             "Seppel": "Schlagzeug",
             "Steffo": "Akkordeon",
+            "MainVocal": "Mikrofon",
+            "Marc": "Bass",
         }
     },
     {
