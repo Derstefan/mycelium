@@ -20,104 +20,117 @@ const initialRepertoire: Song[] = [
         "name": "Go East Go Home",
         "duration": "4:26",
         "instruments": {
-            "Musiker1": "Instrument1",
-            "Musiker2": "Instrument2"
+            "Matze": "Kalri",
+            "Musiker2": "Schlagzeug",
+            "Steffo": "Akkordeon",
         }
     },
     {
         "name": "1-7 Oy!",
         "duration": "3:15",
         "instruments": {
-            "Musiker1": "Instrument1",
-            "Musiker2": "Instrument2"
+            "Matze": "Kalri",
+            "Musiker2": "Schlagzeug",
+            "Steffo": "Akkordeon",
         }
     },
     {
         "name": "Powka",
         "duration": "3:48",
         "instruments": {
-            "Musiker1": "Instrument1",
-            "Musiker2": "Instrument2"
+            "Matze": "Kalri",
+            "Musiker2": "Schlagzeug",
+            "Steffo": "Akkordeon",
         }
     },
     {
         "name": "Chort",
         "duration": "2:56",
         "instruments": {
-            "Musiker1": "Instrument1",
-            "Musiker2": "Instrument2"
+            "Matze": "Kalri",
+            "Musiker2": "Schlagzeug",
+            "Steffo": "Akkordeon",
         }
     },
     {
         "name": "Opinion Man",
         "duration": "3:32",
         "instruments": {
-            "Musiker1": "Instrument1",
-            "Musiker2": "Instrument2"
+            "Matze": "Bari",
+            "Seppel": "Schlagzeug",
+            "Steffo": "Akkordeon",
         }
     },
     {
         "name": "Disco 3000",
         "duration": "4:12",
         "instruments": {
-            "Musiker1": "Instrument1",
-            "Musiker2": "Instrument2"
+            "Matze": "Bari",
+            "Seppel": "Schlagzeug",
+            "Steffo": "Akkordeon",
         }
     },
     {
         "name": "Rejoice!",
         "duration": "3:22",
         "instruments": {
-            "Musiker1": "Instrument1",
-            "Musiker2": "Instrument2"
+            "Matze": "Bari",
+            "Seppel": "Schlagzeug",
+            "Steffo": "Akkordeon",
+
         }
     },
     {
         "name": "Batiar Hoax",
         "duration": "3:58",
         "instruments": {
-            "Musiker1": "Instrument1",
-            "Musiker2": "Instrument2"
+            "Matze": "Bari",
+            "Seppel": "Schlagzeug",
+            "Steffo": "Akkordeon",
+
         }
     },
     {
         "name": "Lullaby Of The Sleepless",
         "duration": "4:05",
         "instruments": {
-            "Musiker1": "Instrument1",
-            "Musiker2": "Instrument2"
+            "Matze": "Bari",
+            "Seppel": "Goc",
+            "Steffo": "Posaune",
         }
     },
     {
         "name": "Moloch & Nadiya",
         "duration": "3:45",
         "instruments": {
-            "Musiker1": "Instrument1",
-            "Musiker2": "Instrument2"
+            "Steffo": "Gitarre",
         }
     },
     {
         "name": "Tomu Kosa",
         "duration": "3:50",
         "instruments": {
-            "Musiker1": "Instrument1",
-            "Musiker2": "Instrument2"
+            "Matze": "Kalri",
+            "Seppel": "Schlagzeug",
+            "Steffo": "Akkordeon",
         }
     },
     {
         "name": "Avtobus",
         "duration": "4:10",
         "instruments": {
-            "Musiker1": "Instrument1",
-            "Musiker2": "Instrument2"
+            "Matze": "Kalri",
+            "Seppel": "Schlagzeug",
+            "Steffo": "Akkordeon",
         }
     },
     {
         "name": "Ikarus",
         "duration": "3:30",
         "instruments": {
-            "Musiker1": "Instrument1",
-            "Musiker2": "Instrument2"
+            "Matze": "Kalri",
+            "Seppel": "Schlagzeug",
+            "Steffo": "Akkordeon",
         }
     }
 ]
@@ -171,23 +184,23 @@ const SetlistPlanner: React.FC = () => {
                 <div className="song-list">
                     {setlist.map((song, index) => (
                         <div key={song.name + index} className="song-item">
+                            {index > 0 && (
+                                <div className="instrument-changes">
+                                    {renderInstrumentChange(setlist[index - 1], song)}
+                                </div>
+                            )}
                             <div className="song-header">
                                 <span className="song-number">{index + 1}.</span>
                                 <h2 className="song-name">{song.name}</h2>
                                 <span className="song-duration">{song.duration}</span>
                             </div>
 
-                            {index > 0 && (
-                                <div className="instrument-changes">
-                                    {renderInstrumentChange(setlist[index - 1], song)}
-                                </div>
-                            )}
                         </div>
                     ))}
                 </div>
 
                 <div className="total-duration">
-                    Gesamtdauer: {formatDuration(totalDuration)}
+                    Reine Spielzeit: {formatDuration(totalDuration)}
                 </div>
             </div>
         );
@@ -372,8 +385,8 @@ const SetlistPlanner: React.FC = () => {
                 prev.instruments[musician] !== next.instruments[musician]
             ) {
                 changes.push(
-                    <div key={musician} className="text-sm text-red-600 ml-8">
-                        {musician} wechselt zu{" "}
+                    <div key={musician} className="text-sm text-gray-600 ml-8">
+                        {musician} {" -> "}
                         <span className="font-bold">{next.instruments[musician]}</span>
                     </div>
                 );
