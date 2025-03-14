@@ -31,7 +31,7 @@ const initialRepertoire: SetlistItem[] = [
             "Matze": "Klari",
             "Seppel": "Schlagzeug",
             "Steffo": "Akkordeon",
-            "MainVocal": "Mikrofon",
+            "LeaBirthe": "Gesang",
             "Marc": "Bass"
         }
     },
@@ -43,7 +43,7 @@ const initialRepertoire: SetlistItem[] = [
             "Matze": "Klari",
             "Seppel": "Schlagzeug",
             "Steffo": "Akkordeon",
-            "MainVocal": "Mikrofon",
+            "LeaBirthe": "Gesang",
             "Marc": "Bass"
 
         }
@@ -56,7 +56,7 @@ const initialRepertoire: SetlistItem[] = [
             "Matze": "Klari",
             "Seppel": "Schlagzeug",
             "Steffo": "Akkordeon",
-            "MainVocal": "Mikrofon",
+            "LeaBirthe": "Gesang",
             "Marc": "Bass"
         }
     },
@@ -68,7 +68,7 @@ const initialRepertoire: SetlistItem[] = [
             "Matze": "Klari",
             "Seppel": "Schlagzeug",
             "Steffo": "Akkordeon",
-            "MainVocal": "Mikrofon",
+            "LeaBirthe": "Gesang",
             "Marc": "Bass"
         }
     },
@@ -80,7 +80,7 @@ const initialRepertoire: SetlistItem[] = [
             "Matze": "Bari",
             "Seppel": "Schlagzeug",
             "Steffo": "Akkordeon",
-            "MainVocal": "Pause",
+            "LeaBirthe": "Pause",
             "Marc": "Bass+Gesang",
         }
     },
@@ -92,7 +92,7 @@ const initialRepertoire: SetlistItem[] = [
             "Matze": "Bari",
             "Seppel": "Schlagzeug",
             "Steffo": "Akkordeon",
-            "MainVocal": "Mikrofon",
+            "LeaBirthe": "Gesang",
             "Marc": "Bass",
 
         }
@@ -105,7 +105,7 @@ const initialRepertoire: SetlistItem[] = [
             "Matze": "Bari",
             "Seppel": "Schlagzeug",
             "Steffo": "Akkordeon",
-            "MainVocal": "Pause",
+            "LeaBirthe": "Pause",
             "Marc": "Bass",
 
         }
@@ -118,7 +118,7 @@ const initialRepertoire: SetlistItem[] = [
             "Matze": "Bari",
             "Seppel": "Schlagzeug",
             "Steffo": "Akkordeon",
-            "MainVocal": "Pause",
+            "LeaBirthe": "Pause",
             "Marc": "Bass"
 
         }
@@ -131,7 +131,7 @@ const initialRepertoire: SetlistItem[] = [
             "Matze": "Bari",
             "Seppel": "Goc",
             "Steffo": "Posaune",
-            "MainVocal": "Mikrofon",
+            "LeaBirthe": "Gesang",
             "Marc": "Gesang"
         }
     },
@@ -143,7 +143,7 @@ const initialRepertoire: SetlistItem[] = [
             "Matze": "Klari",
             "Seppel": "Schlagzeug",
             "Steffo": "Akkordeon",
-            "MainVocal": "Pause",
+            "LeaBirthe": "Pause",
             "Marc": "Bass"
         }
     },
@@ -155,7 +155,7 @@ const initialRepertoire: SetlistItem[] = [
             "Matze": "Klari",
             "Seppel": "Schlagzeug",
             "Steffo": "Akkordeon",
-            "MainVocal": "Mikrofon",
+            "LeaBirthe": "Gesang",
             "Marc": "Bass"
 
         }
@@ -167,7 +167,7 @@ const initialRepertoire: SetlistItem[] = [
             "Matze": "Klari",
             "Seppel": "Schlagzeug",
             "Steffo": "Keyboard",
-            "MainVocal": "Mikrofon",
+            "LeaBirthe": "Gesang",
             "Marc": "Bass"
 
         }
@@ -180,7 +180,7 @@ const initialRepertoire: SetlistItem[] = [
             "Matze": "Klari",
             "Seppel": "Schlagzeug",
             "Steffo": "Akkordeon",
-            "MainVocal": "Pause",
+            "LeaBirthe": "Pause",
             "Marc": "Gesang+Bass",
         }
     },
@@ -192,7 +192,7 @@ const initialRepertoire: SetlistItem[] = [
             "Matze": "Klari",
             "Seppel": "Schlagzeug",
             "Steffo": "Akkordeon",
-            "MainVocal": "Mikrofon",
+            "LeaBirthe": "Gesang",
             "Marc": "Bass",
         }
     },
@@ -204,7 +204,7 @@ const initialRepertoire: SetlistItem[] = [
             "Matze": "Klari",
             "Seppel": "Schlagzeug",
             "Steffo": "Akkordeon",
-            "MainVocal": "Pause",
+            "LeaBirthe": "Pause",
             "Marc": "Gesang+Bass",
         }
     },
@@ -216,7 +216,7 @@ const initialRepertoire: SetlistItem[] = [
             "Matze": "Bari",
             "Seppel": "Schlagzeug",
             "Steffo": "Akkordeon",
-            "MainVocal": "Mikrofon",
+            "LeaBirthe": "Gesang",
             "Marc": "Bass",
         }
     },
@@ -228,7 +228,7 @@ const initialRepertoire: SetlistItem[] = [
             "Matze": "Bari",
             "Seppel": "Schlagzeug",
             "Steffo": "Akkordeon",
-            "MainVocal": "Mikrofon",
+            "LeaBirthe": "Gesang",
             "Marc": "Bass",
         }
     },
@@ -240,7 +240,7 @@ const initialRepertoire: SetlistItem[] = [
             "Matze": "Bari",
             "Seppel": "Schlagzeug",
             "Steffo": "Posaune",
-            "MainVocal": "Pause",
+            "LeaBirthe": "Pause",
             "Marc": "Gesang",
 
         }
@@ -253,7 +253,7 @@ const initialRepertoire: SetlistItem[] = [
             "Matze": "Bari",
             "Seppel": "Schlagzeug",
             "Steffo": "Akkordeon",
-            "MainVocal": "Pause",
+            "LeaBirthe": "Pause",
             "Marc": "Bass",
 
         }
@@ -266,7 +266,7 @@ const initialRepertoire: SetlistItem[] = [
             "Matze": "Klari",
             "Seppel": "Goc",
             "Steffo": "Gitarre",
-            "MainVocal": "Pause",
+            "LeaBirthe": "Pause",
             "Marc": "Gesang+Bass",
         }
     },
@@ -278,7 +278,7 @@ const initialRepertoire: SetlistItem[] = [
             "Matze": "Klari",
             "Seppel": "Goc",
             "Steffo": "Akkordeon",
-            "MainVocal": "Pause",
+            "LeaBirthe": "Pause",
             "Marc": "Bass",
         }
     },
@@ -290,7 +290,7 @@ const initialRepertoire: SetlistItem[] = [
             "Matze": "Klari",
             "Seppel": "Schlagzeug",
             "Steffo": "Akkordeon",
-            "MainVocal": "Mikrofon",
+            "LeaBirthe": "Gesang",
             "Marc": "Bass",
         }
     },
