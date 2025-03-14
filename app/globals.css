@@ -24,6 +24,12 @@ body {
 }
 
 @media print {
+
+  /* Production könnte andere Breakpoints haben */
+  body {
+    background: white !important;
+  }
+
   .printable-content {
     display: block !important;
   }
@@ -31,4 +37,22 @@ body {
   .no-print {
     display: none !important;
   }
+
+  .print-title {
+    font-family: "Arial", sans-serif !important;
+  }
+
+}
+
+@font-face {
+  font-family: 'PrintFont';
+  src: url('/fonts/printfont.woff2') format('woff2');
+  font-display: block;
+}
+
+@page {
+  size: A4;
+  /* Wird manchmal ignoriert */
+  margin: 2cm;
+  /* Browser-spezifisch */
 }
