@@ -183,19 +183,21 @@ const SetlistPlanner: React.FC = () => {
 
                 <div className="song-list">
                     {setlist.map((song, index) => (
-                        <div key={song.name + index} className="song-item">
+                        <>
                             {index > 0 && (
                                 <div className="instrument-changes">
                                     {renderInstrumentChange(setlist[index - 1], song)}
                                 </div>
                             )}
-                            <div className="song-header">
-                                <span className="song-number">{index + 1}.</span>
-                                <h2 className="song-name">{song.name}</h2>
-                                <span className="song-duration">{song.duration}</span>
-                            </div>
+                            <div key={song.name + index} className="song-item">
+                                <div className="song-header">
+                                    <span className="song-number">{index + 1}.</span>
+                                    <h2 className="song-name">{song.name}</h2>
+                                    <span className="song-duration">{song.duration}</span>
+                                </div>
 
-                        </div>
+                            </div>
+                        </>
                     ))}
                 </div>
 
