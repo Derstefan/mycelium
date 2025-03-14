@@ -15,11 +15,18 @@ interface Song {
     };
 }
 
+interface SetlistItem extends Song {
+    type?: 'song' | 'pause' | 'encore';
+}
+
+
+
 // Statisches Array mit Songs der Batiargang – basierend auf aktuellen Internetrecherchen
-const initialRepertoire: Song[] = [
+const initialRepertoire: SetlistItem[] = [
     {
         "name": "Go East Go Home",
         "duration": "4:26",
+        "tempo": "110",
         "instruments": {
             "Matze": "Kalri",
             "Musiker2": "Schlagzeug",
@@ -29,6 +36,7 @@ const initialRepertoire: Song[] = [
     {
         "name": "1-7 Oy!",
         "duration": "3:15",
+        "tempo": "120",
         "instruments": {
             "Matze": "Kalri",
             "Musiker2": "Schlagzeug",
@@ -38,6 +46,7 @@ const initialRepertoire: Song[] = [
     {
         "name": "Powka",
         "duration": "3:48",
+        "tempo": "150",
         "instruments": {
             "Matze": "Kalri",
             "Musiker2": "Schlagzeug",
@@ -47,6 +56,7 @@ const initialRepertoire: Song[] = [
     {
         "name": "Chort",
         "duration": "2:56",
+        "tempo": "140",
         "instruments": {
             "Matze": "Kalri",
             "Musiker2": "Schlagzeug",
@@ -56,6 +66,7 @@ const initialRepertoire: Song[] = [
     {
         "name": "Opinion Man",
         "duration": "3:32",
+        "tempo": "110",
         "instruments": {
             "Matze": "Bari",
             "Seppel": "Schlagzeug",
@@ -65,6 +76,7 @@ const initialRepertoire: Song[] = [
     {
         "name": "Disco 3000",
         "duration": "4:12",
+        "tempo": "120",
         "instruments": {
             "Matze": "Bari",
             "Seppel": "Schlagzeug",
@@ -74,6 +86,7 @@ const initialRepertoire: Song[] = [
     {
         "name": "Rejoice!",
         "duration": "3:22",
+        "tempo": "140",
         "instruments": {
             "Matze": "Bari",
             "Seppel": "Schlagzeug",
@@ -84,6 +97,7 @@ const initialRepertoire: Song[] = [
     {
         "name": "Batiar Hoax",
         "duration": "3:58",
+        "tempo": "110",
         "instruments": {
             "Matze": "Bari",
             "Seppel": "Schlagzeug",
@@ -94,6 +108,7 @@ const initialRepertoire: Song[] = [
     {
         "name": "Lullaby Of The Sleepless",
         "duration": "4:05",
+        "tempo": "100",
         "instruments": {
             "Matze": "Bari",
             "Seppel": "Goc",
@@ -103,6 +118,7 @@ const initialRepertoire: Song[] = [
     {
         "name": "Moloch & Nadiya",
         "duration": "3:45",
+        "tempo": "100",
         "instruments": {
             "Steffo": "Gitarre",
         }
@@ -110,6 +126,7 @@ const initialRepertoire: Song[] = [
     {
         "name": "Tomu Kosa",
         "duration": "3:50",
+        "tempo": "100",
         "instruments": {
             "Matze": "Kalri",
             "Seppel": "Schlagzeug",
@@ -119,6 +136,7 @@ const initialRepertoire: Song[] = [
     {
         "name": "Avtobus",
         "duration": "4:10",
+        "tempo": "110",
         "instruments": {
             "Matze": "Kalri",
             "Seppel": "Schlagzeug",
@@ -128,11 +146,24 @@ const initialRepertoire: Song[] = [
     {
         "name": "Ikarus",
         "duration": "3:30",
+        "tempo": "90",
         "instruments": {
             "Matze": "Kalri",
             "Seppel": "Schlagzeug",
             "Steffo": "Akkordeon",
         }
+    },
+    {
+        name: "PAUSE",
+        duration: "5:00",
+        type: "pause",
+        instruments: {}
+    },
+    {
+        name: "Zugaben",
+        duration: "0:00",
+        type: "encore",
+        instruments: {}
     }
 ]
 const parseDuration = (duration: string) => {
@@ -169,12 +200,12 @@ const SetlistPlanner: React.FC = () => {
         event.dataTransfer.setData("text/plain", JSON.stringify({ source, index }));
     };
 
-    const PrintableSetlist: React.FC<{ title: string; setlist: Song[] }> = ({
+    const PrintableSetlist: React.FC<{ title: string; setlist: SetlistItem[] }> = ({
         title,
         setlist,
     }) => {
         const totalDuration = setlist.reduce(
-            (sum, song) => sum + parseDuration(song.duration),
+            (sum, song) => sum + (song.type === 'song' ? parseDuration(song.duration) : 0),
             0
         );
 
@@ -183,27 +214,42 @@ const SetlistPlanner: React.FC = () => {
                 <h1 className="print-title">{title}</h1>
 
                 <div className="song-list">
-                    {setlist.map((song, index) => (
-                        <>
-                            {index > 0 && (
-                                <div className="instrument-changes">
-                                    {renderInstrumentChange(setlist[index - 1], song)}
-                                </div>
-                            )}
-                            <div key={song.name + index} className="song-item">
-                                <div className="song-header">
-                                    <span className="song-number">{index + 1}.</span>
-                                    <h2 className="song-name">{song.name}</h2>
-                                    <span className="song-duration">{song.duration}</span>
-                                </div>
+                    {setlist.map((song, index) => {
+                        const isSpecial = song.type === 'pause' || song.type === 'encore';
+                        const songNumber = isSpecial ? null : index + 1;
 
-                            </div>
-                        </>
-                    ))}
+                        return (
+                            <React.Fragment key={song.name}>
+                                {index > 0 && (
+                                    <div className="instrument-changes">
+                                        {renderInstrumentChange(setlist[index - 1], song)}
+                                    </div>
+                                )}
+
+                                <div className={`song-item ${isSpecial ? 'special-item' : ''
+                                    }`}>
+                                    <div className="song-header">
+                                        {!isSpecial && (
+                                            <span className="song-number">{songNumber}.</span>
+                                        )}
+                                        <h2 className={` ${isSpecial ? 'special-name' : 'song-name'
+                                            }`} >
+                                            {song.type === 'encore' && ''}
+                                            {song.name}
+                                            {song.type === 'pause' && ''}
+                                        </h2>
+                                        {!isSpecial && (
+                                            <span className="song-duration">{song.duration}</span>
+                                        )}
+                                    </div>
+                                </div>
+                            </React.Fragment>
+                        );
+                    })}
                 </div>
 
                 <div className="total-duration">
-                    Reine Spielzeit: {formatDuration(totalDuration)}
+                    Reine Spielzeit: {formatDuration(setlist.reduce((sum, song) => sum + parseDuration(song.duration), 0))}
                 </div>
             </div>
         );
@@ -213,46 +259,83 @@ const SetlistPlanner: React.FC = () => {
         const printWindow = window.open("", "_blank");
         if (!printWindow) return;
 
-        //${document.querySelector("style")?.innerHTML}
         printWindow.document.write(`
           <html>
             <head>
               <title>${title}</title>
-                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
               <style>
-                
                 @media print {
-                  body { padding: 20px; }
+                  body { 
+                    padding: 20px; 
+                    font-family: Arial, sans-serif;
+                  }
+                  
                   .print-title { 
                     font-size: 24pt; 
                     text-align: center; 
                     margin-bottom: 30px;
                   }
+                  
                   .song-item {
                     page-break-inside: avoid;
                     margin-bottom: 15px;
                   }
+                  
+                  .special-item {
+                    background-color: #f5f5f5;
+                    border-left: 4px solid #ddd;
+                    padding: 10px;
+                    color: #666;
+                  }
+                  
                   .song-header {
                     display: flex;
                     align-items: center;
                     gap: 15px;
                   }
-                  .song-name {
-                    font-size: 18pt;
-                    margin: 0;
+                  
+                  .song-number {
+                    font-weight: bold;
+                    min-width: 30px;
+                    font-size: 14pt;
                   }
+                  
+                  .song-name {
+                    font-size: 16pt;
+                    margin: 0;
+                    flex-grow: 1;
+                  }
+                
+                  .special-name {
+                    font-size: 10pt;
+                    margin: 0;
+                    color: #999;
+                    flex-grow: 1;
+                  }
+                  
+                  .special-item .song-name {
+                    font-size: 14pt;
+                  }
+                  
                   .song-duration {
                     margin-left: auto;
+                    color: #666;
+                    font-size: 14pt;
                   }
+                  
                   .instrument-changes {
-                    font-size: 10pt;
+                    font-size: 9pt;
                     color: #666;
                     margin-left: 30px;
+                    margin-bottom: 5px;
                   }
+                  
                   .total-duration {
                     margin-top: 30px;
                     font-weight: bold;
                     text-align: right;
+                    font-size: 14pt;
                   }
                 }
               </style>
@@ -380,6 +463,8 @@ const SetlistPlanner: React.FC = () => {
         }
     };
 
+
+
     // Zeigt zwischen zwei Songs in der Setlist den Instrumentwechsel an
     const renderInstrumentChange = (prev: Song, next: Song) => {
         const changes = [];
@@ -400,8 +485,9 @@ const SetlistPlanner: React.FC = () => {
     };
 
     // Gemeinsame Render-Funktion für beide Listen
-    const renderList = (list: Song[], listType: "repertoire" | "setlist") => {
+    const renderList = (list: SetlistItem[], listType: "repertoire" | "setlist") => {
         const dropIndex = listType === "repertoire" ? repertoireDropIndex : setlistDropIndex;
+
         return (
             <div
                 className="bg-gray-100 p-4 rounded-md w-full min-h-[150px] relative"
@@ -412,28 +498,45 @@ const SetlistPlanner: React.FC = () => {
                 <h2 className="text-2xl font-bold text-gray-900 mb-4">
                     {listType === "repertoire" ? "Repertoire" : "Setlist"}
                 </h2>
+
                 {list.length === 0 && (
                     <div className="absolute inset-0 flex items-center justify-center text-gray-500">
-                        {listType === "repertoire"
-                            ? ""
-                            : ""}
+                        {listType === "repertoire" ? "Keine Songs verfügbar" : "Songs hierher ziehen"}
                     </div>
                 )}
+
                 {list.map((song, index) => (
-                    <React.Fragment key={song.name + index}>
+                    <React.Fragment key={song.name}>
                         {dropIndex === index && (
                             <div className="h-0 border-t-2 border-dashed border-yellow-500 mb-2 animate-fadeIn" />
                         )}
+
                         {listType === "setlist" && index > 0 && renderInstrumentChange(list[index - 1], song)}
+
                         <div
                             draggable
                             onDragStart={(e) => handleDragStart(e, listType, index)}
-                            className="draggable-card bg-white text-gray-900 border border-gray-300 p-3 mb-2 rounded-md shadow-md cursor-move hover:shadow-lg transition-all"
+                            className={`draggable-card ${song.type === 'pause'
+                                ? 'bg-gray-200 italic'
+                                : song.type === 'encore'
+                                    ? 'bg-gray-100 italic'
+                                    : 'bg-white'
+                                } text-gray-900 border border-gray-300 p-3 mb-2 rounded-md shadow-md cursor-move hover:shadow-lg transition-all`}
                         >
-                            <div className="font-bold">{song.name}</div>
+                            <div className="font-bold">
+                                {song.type === 'encore' && ' '}
+                                {song.name}
+                                {song.type === 'pause' && ' '}
+                            </div>
+                            {song.type === 'song' && (
+                                <div className="text-sm text-gray-600">
+                                    {song.tempo} BPM • {song.duration}
+                                </div>
+                            )}
                         </div>
                     </React.Fragment>
                 ))}
+
                 {dropIndex === list.length && (
                     <div className="h-0 border-t-2 border-dashed border-yellow-500 mb-2 animate-fadeIn" />
                 )}
