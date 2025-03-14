@@ -5,6 +5,7 @@ import ReactDOMServer from 'react-dom/server';
 interface Song {
     name: string;
     duration: string;
+    tempo?: string;
     beginningChord?: string;
     endChord?: string;
     beginningTempo?: string;
@@ -212,13 +213,13 @@ const SetlistPlanner: React.FC = () => {
         const printWindow = window.open("", "_blank");
         if (!printWindow) return;
 
+        //${document.querySelector("style")?.innerHTML}
         printWindow.document.write(`
           <html>
             <head>
               <title>${title}</title>
                 <meta name="viewport" content="width=device-width, initial-scale=1.0">
               <style>
-                ${document.querySelector("style")?.innerHTML}
                 
                 @media print {
                   body { padding: 20px; }
