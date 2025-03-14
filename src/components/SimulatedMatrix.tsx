@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState, MouseEvent } from 'react';
 import { simulationData } from '../data/data';
 import { generateSeededColor } from '../script/utils';
 
-const evolveEnd = 100;
+//const evolveEnd = 100;
 const scale = 3; // 3px per unit
 const maxCoord = 2187; // 0 to 12187 => 12188 units
 const canvasSize = maxCoord * scale; // total pixel size
@@ -25,7 +25,7 @@ const SimulationMatrix: React.FC = () => {
 
     // Pre-calculate canvas points from simulationData
     const points = simulationData.map((data, index) => {
-        const { id1, id2, ratio, evolveCount, winnerId } = data;
+        const { id1, id2, winnerId } = data;
         let color = '#808080'; // default for tie
         if (winnerId === id1) {
             color = generateSeededColor(id1);

@@ -76,7 +76,7 @@ const BattleMatrix: React.FC<BattleMatrixProps> = ({ eConfig }) => {
             await navigator.clipboard.writeText(JSON.stringify(results, null, 2));
             setCopyFeedback('Ergebnisse in Zwischenablage kopiert!');
         } catch (err) {
-            setCopyFeedback('Fehler beim Kopieren!');
+            setCopyFeedback('Fehler beim Kopieren!' + err);
         }
         setTimeout(() => setCopyFeedback(''), 2000);
     };
