@@ -22,3 +22,13 @@ body {
   background: var(--background);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+@media print {
+  .printable-content {
+    display: block !important;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+}
