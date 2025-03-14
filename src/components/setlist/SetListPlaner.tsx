@@ -260,7 +260,7 @@ const SetlistPlanner: React.FC = () => {
           <html>
             <head>
               <title>${title}</title>
-              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+             <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
               <style>
                 @media print {
                   body { 
@@ -334,6 +334,24 @@ const SetlistPlanner: React.FC = () => {
                     text-align: right;
                     font-size: 14pt;
                   }
+                    @media print {
+  @page {
+    margin: 0;
+    size: A4 portrait;
+    marks: none;
+  }
+  
+  body {
+    margin: 0!important;
+    padding: 15mm!important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  
+  /* Verbirgt alle Browser-generierten Footer */
+  @page :footer { display: none; }
+  @page :header { display: none; }
+}
                 }
               </style>
             </head>
@@ -460,6 +478,24 @@ const SetlistPlanner: React.FC = () => {
         }
     };
 
+    // Neuer State für Hover-Status
+    const [hoveredItem, setHoveredItem] = useState<{
+        index: number;
+        list: "repertoire" | "setlist";
+    } | null>(null);
+
+    // Handler für Listenänderungen
+    const handleAddToSetlist = (index: number) => {
+        const item = repertoire[index];
+        setRepertoire(prev => prev.filter((_, i) => i !== index));
+        setSetlist(prev => [...prev, item]);
+    };
+
+    const handleRemoveFromSetlist = (index: number) => {
+        const item = setlist[index];
+        setSetlist(prev => prev.filter((_, i) => i !== index));
+        setRepertoire(prev => [item, ...prev]);
+    };
 
 
     // Zeigt zwischen zwei Songs in der Setlist den Instrumentwechsel an
@@ -487,12 +523,12 @@ const SetlistPlanner: React.FC = () => {
 
         return (
             <div
-                className="bg-gray-100 p-4 rounded-md w-full min-h-[150px] relative"
+                className="bg-gray-100 p-3 md:p-4 rounded-md w-full min-h-[150px] relative shadow-sm md:shadow-md"
                 onDragOver={listType === "repertoire" ? handleRepertoireDragOver : handleSetlistDragOver}
                 onDragLeave={listType === "repertoire" ? handleRepertoireDragLeave : handleSetlistDragLeave}
                 onDrop={(e) => handleDrop(e, listType, dropIndex)}
             >
-                <h2 className="text-2xl font-bold text-gray-900 mb-4">
+                <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-3 md:mb-4">
                     {listType === "repertoire" ? "Repertoire" : "Setlist"}
                 </h2>
 
@@ -503,7 +539,12 @@ const SetlistPlanner: React.FC = () => {
                 )}
 
                 {list.map((song, index) => (
-                    <React.Fragment key={song.name}>
+                    <div
+                        key={song.name}
+                        className="group relative" // CSS Group für Hover-Status
+                        onMouseEnter={() => setHoveredItem({ index, list: listType })}
+                        onMouseLeave={() => setHoveredItem(null)}
+                    >
                         {dropIndex === index && (
                             <div className="h-0 border-t-2 border-dashed border-yellow-500 mb-2 animate-fadeIn" />
                         )}
@@ -513,25 +554,45 @@ const SetlistPlanner: React.FC = () => {
                         <div
                             draggable
                             onDragStart={(e) => handleDragStart(e, listType, index)}
-                            className={`draggable-card ${song.type === 'pause'
+                            className={`relative draggable-card ${song.type === 'pause'
                                 ? 'bg-gray-200 italic'
                                 : song.type === 'encore'
                                     ? 'bg-gray-100 italic'
                                     : 'bg-white'
-                                } text-gray-900 border border-gray-300 p-3 mb-2 rounded-md shadow-md cursor-move hover:shadow-lg transition-all`}
+                                } text-gray-900 border border-gray-300 rounded-md shadow-md cursor-move hover:shadow-lg transition-all p-2 md:p-3 text-sm md:text-base mb-2 md:mb-3 rounded-sm md:rounded-md`}
                         >
-                            <div className="font-bold">
-                                {song.type === 'encore' && ' '}
-                                {song.name}
-                                {song.type === 'pause' && ' '}
-                            </div>
-                            {song.type === 'song' && (
-                                <div className="text-sm text-gray-600">
-                                    {song.tempo} BPM • {song.duration}
+                            <div className="flex items-center">
+                                <div className="font-bold flex-1 pr-6">
+                                    {song.name}
                                 </div>
-                            )}
+                                {song.type === 'song' && (
+                                    <div className="text-sm text-gray-600">
+                                        {song.tempo} BPM • {song.duration}
+                                    </div>
+                                )}
+                                <button
+                                    onClick={() =>
+                                        listType === "repertoire"
+                                            ? handleAddToSetlist(index)
+                                            : handleRemoveFromSetlist(index)
+                                    }
+                                    className={`absolute right-2 top-1/2 -translate-y-1/2 cursor-pointer flex-
+              ${hoveredItem?.index === index && hoveredItem?.list === listType
+                                            ? "opacity-100"
+                                            : "opacity-0"
+                                        } 
+              transition-opacity duration-200 ease-in-out
+              p-1 rounded-full bg-gray-200 hover:bg-gray-300 z-10`}
+                                >
+                                    {listType === "repertoire" ? (
+                                        <div className="h-5 w-5 text-gray-600" >+</div>
+                                    ) : (
+                                        <div className="h-5 w-5 text-gray-600" >-</div>
+                                    )}
+                                </button>
+                            </div>
                         </div>
-                    </React.Fragment>
+                    </div>
                 ))}
 
                 {dropIndex === list.length && (
@@ -543,33 +604,35 @@ const SetlistPlanner: React.FC = () => {
 
     return (
         <div className="bg-gray-50 min-h-screen py-6">
-            <div className="max-w-7xl min-w-[600px] mx-auto px-4">
+            <div className="max-w-7xl mx-auto px-4 xl:px-0">
                 <div className="mb-6">
                     <input
                         type="text"
                         value={title}
                         onChange={(e) => setTitle(e.target.value)}
-                        className="text-3xl font-bold text-gray-900 bg-transparent border-b border-gray-300 focus:outline-none focus:border-yellow-500 w-full"
+                        className="text-2xl md:text-4xl font-bold text-gray-900 bg-transparent border-b border-gray-300 focus:outline-none focus:border-yellow-500 w-full pb-1"
                     />
                 </div>
-                <div className="flex flex-col md:flex-row gap-6">
-                    <div className="flex-1 min-w-[500px]">
+                <div className="flex flex-col md:flex-row gap-4 lg:gap-8">
+                    {/* Setlist Column */}
+                    <div className="flex-1 md:min-w-[480px] lg:min-w-[520px]">
                         {renderList(setlist, "setlist")}
-                        <div className="mt-4 text-lg font-semibold text-gray-800">
-                            Reine Spielzeit: {formatDuration(totalDuration)}
+                        <div className="mt-4 text-base lg:text-lg font-semibold text-gray-800 flex items-center justify-between">
+                            <span>Spielzeit: {formatDuration(totalDuration)}</span>
                             <button
                                 onClick={handlePrint}
-                                className="ml-4 px-4 py-2 bg-yellow-400 text-white rounded-md hover:bg-yellow-500 transition-colors cursor-pointer"
+                                className="px-4 py-2 bg-yellow-400 text-white rounded-md hover:bg-yellow-500 transition-colors cursor-pointer text-sm md:text-base"
                             >
-                                print
+                                Drucken
                             </button>
                         </div>
                     </div>
-                    <div className="flex-1 min-w-[500px]">
+
+                    {/* Repertoire Column */}
+                    <div className="flex-1 md:min-w-[480px] lg:min-w-[520px]">
                         {renderList(repertoire, "repertoire")}
                     </div>
                 </div>
-
             </div>
         </div>
     );

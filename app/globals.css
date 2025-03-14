@@ -41,6 +41,11 @@ body {
   .print-title {
     font-family: "Arial", sans-serif !important;
   }
+  @page {
+    margin: 0; /* Entfernt Standard-Ränder */
+    size: auto; /* Keine feste Seitengröße */
+  }
+  
 
 }
 
@@ -56,3 +61,4 @@ body {
   margin: 2cm;
   /* Browser-spezifisch */
 }
+
