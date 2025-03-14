@@ -28,8 +28,8 @@ const initialRepertoire: SetlistItem[] = [
         "duration": "4:26",
         "tempo": "110",
         "instruments": {
-            "Matze": "Kalri",
-            "Musiker2": "Schlagzeug",
+            "Matze": "Klari",
+            "Seppel": "Schlagzeug",
             "Steffo": "Akkordeon",
         }
     },
@@ -38,8 +38,8 @@ const initialRepertoire: SetlistItem[] = [
         "duration": "3:15",
         "tempo": "120",
         "instruments": {
-            "Matze": "Kalri",
-            "Musiker2": "Schlagzeug",
+            "Matze": "Klari",
+            "Seppel": "Schlagzeug",
             "Steffo": "Akkordeon",
         }
     },
@@ -48,8 +48,8 @@ const initialRepertoire: SetlistItem[] = [
         "duration": "3:48",
         "tempo": "150",
         "instruments": {
-            "Matze": "Kalri",
-            "Musiker2": "Schlagzeug",
+            "Matze": "Klari",
+            "Seppel": "Schlagzeug",
             "Steffo": "Akkordeon",
         }
     },
@@ -58,8 +58,8 @@ const initialRepertoire: SetlistItem[] = [
         "duration": "2:56",
         "tempo": "140",
         "instruments": {
-            "Matze": "Kalri",
-            "Musiker2": "Schlagzeug",
+            "Matze": "Klari",
+            "Seppel": "Schlagzeug",
             "Steffo": "Akkordeon",
         }
     },
@@ -116,29 +116,11 @@ const initialRepertoire: SetlistItem[] = [
         }
     },
     {
-        "name": "Moloch & Nadiya",
-        "duration": "3:45",
-        "tempo": "100",
-        "instruments": {
-            "Steffo": "Gitarre",
-        }
-    },
-    {
-        "name": "Tomu Kosa",
-        "duration": "3:50",
-        "tempo": "100",
-        "instruments": {
-            "Matze": "Kalri",
-            "Seppel": "Schlagzeug",
-            "Steffo": "Akkordeon",
-        }
-    },
-    {
         "name": "Avtobus",
         "duration": "4:10",
         "tempo": "110",
         "instruments": {
-            "Matze": "Kalri",
+            "Matze": "Klari",
             "Seppel": "Schlagzeug",
             "Steffo": "Akkordeon",
         }
@@ -148,7 +130,118 @@ const initialRepertoire: SetlistItem[] = [
         "duration": "3:30",
         "tempo": "90",
         "instruments": {
-            "Matze": "Kalri",
+            "Matze": "Klari",
+            "Seppel": "Schlagzeug",
+            "Steffo": "Akkordeon",
+        }
+    }, {
+        "name": "Sve Sto Cveta",
+        "duration": "5:22",
+        "tempo": "110",
+        "instruments": {
+            "Matze": "Klari",
+            "Seppel": "Schlagzeug",
+            "Steffo": "Keyboard",
+        }
+    },
+    {
+        "name": "Why is she so mental",
+        "duration": "2:29",
+        "tempo": "120",
+        "instruments": {
+            "Matze": "Klari",
+            "Seppel": "Schlagzeug",
+            "Steffo": "Akkordeon",
+        }
+    },
+    {
+        "name": "Kestenje",
+        "duration": "4:48",
+        "tempo": "150",
+        "instruments": {
+            "Matze": "Klari",
+            "Seppel": "Schlagzeug",
+            "Steffo": "Akkordeon",
+        }
+    },
+    {
+        "name": "Parasocial Love Affair",
+        "duration": "5:16",
+        "tempo": "140",
+        "instruments": {
+            "Matze": "Klari",
+            "Seppel": "Schlagzeug",
+            "Steffo": "Akkordeon",
+        }
+    },
+    {
+        "name": "The Kids from Surdilica",
+        "duration": "3:42",
+        "tempo": "110",
+        "instruments": {
+            "Matze": "Bari",
+            "Seppel": "Schlagzeug",
+            "Steffo": "Akkordeon",
+        }
+    },
+    {
+        "name": "Acuka",
+        "duration": "4:27",
+        "tempo": "120",
+        "instruments": {
+            "Matze": "Bari",
+            "Seppel": "Schlagzeug",
+            "Steffo": "Akkordeon",
+        }
+    },
+    {
+        "name": "Lonesome Lifes",
+        "duration": "2:51",
+        "tempo": "140",
+        "instruments": {
+            "Matze": "Bari",
+            "Seppel": "Schlagzeug",
+            "Steffo": "Posaune",
+
+        }
+    },
+    {
+        "name": "Chicken Song",
+        "duration": "1:51",
+        "tempo": "110",
+        "instruments": {
+            "Matze": "Bari",
+            "Seppel": "Schlagzeug",
+            "Steffo": "Akkordeon",
+
+        }
+    },
+    {
+        "name": "Molka",
+        "duration": "4:49",
+        "tempo": "100",
+        "instruments": {
+            "Matze": "Klari",
+            "Seppel": "Goc",
+            "Steffo": "Gitarre",
+        }
+    },
+    {
+        "name": "Nunta pe Tisa",
+        "duration": "4:34",
+        "tempo": "110",
+        "instruments": {
+            "Matze": "Klari",
+            "Seppel": "Goc",
+            "Steffo": "Akkordeon",
+        }
+    },
+    {
+        "name": "Yaldi Ha Yakar",
+        "duration": "8:01",
+        "tempo": "90",
+        "instruments": {
+            "Matze": "Klari",
             "Seppel": "Schlagzeug",
             "Steffo": "Akkordeon",
         }
@@ -184,7 +277,8 @@ const SetlistPlanner: React.FC = () => {
     // Editierbarer Titel
     const [title, setTitle] = useState("Glauchauer Stadtfest 2023");
 
-    const [repertoire, setRepertoire] = useState<Song[]>(initialRepertoire);
+    //sort alphabetically
+    const [repertoire, setRepertoire] = useState<Song[]>(initialRepertoire.sort((a, b) => a.name.localeCompare(b.name)));
     const [setlist, setSetlist] = useState<Song[]>([]);
     // Separater Drop-Index-Status für beide Container
     const [setlistDropIndex, setSetlistDropIndex] = useState<number | null>(null);
@@ -219,7 +313,7 @@ const SetlistPlanner: React.FC = () => {
                             <React.Fragment key={song.name}>
                                 {index > 0 && (
                                     <div className="instrument-changes">
-                                        {renderInstrumentChange(setlist[index - 1], song)}
+                                        {renderInstrumentChange(setlist[index - 1], song, false)}
                                     </div>
                                 )}
 
@@ -231,9 +325,7 @@ const SetlistPlanner: React.FC = () => {
                                         )}
                                         <h2 className={` ${isSpecial ? 'special-name' : 'song-name'
                                             }`} >
-                                            {song.type === 'encore' && ''}
                                             {song.name}
-                                            {song.type === 'pause' && ''}
                                         </h2>
                                         {!isSpecial && (
                                             <span className="song-duration">{song.duration}</span>
@@ -246,7 +338,7 @@ const SetlistPlanner: React.FC = () => {
                 </div>
 
                 <div className="total-duration">
-                    Reine Spielzeit: {formatDuration(setlist.reduce((sum, song) => sum + parseDuration(song.duration), 0))}
+                    reine Spielzeit: {formatDuration(setlist.reduce((sum, song) => sum + parseDuration(song.duration), 0))}
                 </div>
             </div>
         );
@@ -264,19 +356,19 @@ const SetlistPlanner: React.FC = () => {
               <style>
                 @media print {
                   body { 
-                    padding: 20px; 
+                    padding: 10px; 
                     font-family: Arial, sans-serif;
                   }
                   
                   .print-title { 
-                    font-size: 24pt; 
+                    font-size: 14pt; 
                     text-align: center; 
-                    margin-bottom: 30px;
+                    margin-bottom: 5px;
                   }
                   
                   .song-item {
                     page-break-inside: avoid;
-                    margin-bottom: 15px;
+                    margin-bottom: 5px;
                   }
                   
                   .special-item {
@@ -289,17 +381,17 @@ const SetlistPlanner: React.FC = () => {
                   .song-header {
                     display: flex;
                     align-items: center;
-                    gap: 15px;
+                    gap: 12px;
                   }
                   
                   .song-number {
                     font-weight: bold;
                     min-width: 30px;
-                    font-size: 14pt;
+                    font-size: 10pt;
                   }
                   
                   .song-name {
-                    font-size: 16pt;
+                    font-size: 12pt;
                     margin: 0;
                     flex-grow: 1;
                   }
@@ -318,7 +410,7 @@ const SetlistPlanner: React.FC = () => {
                   .song-duration {
                     margin-left: auto;
                     color: #666;
-                    font-size: 14pt;
+                    font-size: 10pt;
                   }
                   
                   .instrument-changes {
@@ -332,7 +424,7 @@ const SetlistPlanner: React.FC = () => {
                     margin-top: 30px;
                     font-weight: bold;
                     text-align: right;
-                    font-size: 14pt;
+                    font-size: 10pt;
                   }
                     @media print {
   @page {
@@ -343,7 +435,7 @@ const SetlistPlanner: React.FC = () => {
   
   body {
     margin: 0!important;
-    padding: 15mm!important;
+    padding: 5mm!important;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
@@ -497,9 +589,7 @@ const SetlistPlanner: React.FC = () => {
         setRepertoire(prev => [item, ...prev]);
     };
 
-
-    // Zeigt zwischen zwei Songs in der Setlist den Instrumentwechsel an
-    const renderInstrumentChange = (prev: Song, next: Song) => {
+    const renderInstrumentChange = (prev: Song, next: Song, vertical = true) => {
         const changes = [];
         for (const musician in next.instruments) {
             if (
@@ -507,14 +597,28 @@ const SetlistPlanner: React.FC = () => {
                 prev.instruments[musician] !== next.instruments[musician]
             ) {
                 changes.push(
-                    <div key={musician} className="text-sm text-gray-600 ml-8">
-                        {musician} {" -> "}
-                        <span className="font-bold">{next.instruments[musician]}</span>
-                    </div>
+                    vertical ? (
+                        <div key={musician} className="text-sm text-gray-600 ml-8">
+                            {"  ⟲ "} {musician} {" → "}
+                            <span className="font-bold">{next.instruments[musician]}</span>
+                        </div>
+                    ) : (
+                        <span key={musician} className="text-sm text-gray-600 mr-3 last:mr-0">
+                            {"  ⟲ "} {musician} <span className="text-xs mx-1">{" → "}</span>
+                            <span className="font-bold">{next.instruments[musician]}</span>
+                        </span>
+                    )
                 );
             }
         }
-        return changes;
+
+        return vertical ? (
+            changes
+        ) : (
+            <div className="ml-8 flex flex-wrap gap-2">
+                {changes}
+            </div>
+        );
     };
 
     // Gemeinsame Render-Funktion für beide Listen
@@ -604,7 +708,7 @@ const SetlistPlanner: React.FC = () => {
 
     return (
         <div className="bg-gray-50 min-h-screen py-6">
-            <div className="max-w-7xl mx-auto px-4 xl:px-0">
+            <div className="max-w-7xl mx-auto px-4 xl:px-4"> {/* Erhöhtes Padding */}
                 <div className="mb-6">
                     <input
                         type="text"
@@ -613,9 +717,9 @@ const SetlistPlanner: React.FC = () => {
                         className="text-2xl md:text-4xl font-bold text-gray-900 bg-transparent border-b border-gray-300 focus:outline-none focus:border-yellow-500 w-full pb-1"
                     />
                 </div>
-                <div className="flex flex-col md:flex-row gap-4 lg:gap-8">
+                <div className="flex flex-col md:flex-row gap-6 lg:gap-8"> {/* Größerer Abstand */}
                     {/* Setlist Column */}
-                    <div className="flex-1 md:min-w-[480px] lg:min-w-[520px]">
+                    <div className="flex-1 min-w-[320px] md:min-w-[400px] lg:min-w-[480px]"> {/* Mindestbreiten */}
                         {renderList(setlist, "setlist")}
                         <div className="mt-4 text-base lg:text-lg font-semibold text-gray-800 flex items-center justify-between">
                             <span>Spielzeit: {formatDuration(totalDuration)}</span>
@@ -629,7 +733,7 @@ const SetlistPlanner: React.FC = () => {
                     </div>
 
                     {/* Repertoire Column */}
-                    <div className="flex-1 md:min-w-[480px] lg:min-w-[520px]">
+                    <div className="flex-1 min-w-[320px] md:min-w-[400px] lg:min-w-[480px]"> {/* Gleiche Mindestbreite */}
                         {renderList(repertoire, "repertoire")}
                     </div>
                 </div>
