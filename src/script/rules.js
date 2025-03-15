@@ -50,42 +50,48 @@ export function generateRuleSetCycle(numRules = 12, elementNumber, seed) {
   const ruleSet = [];
 
   //array with first element 1 length elementNumber-2
-  /*
-    const array1 = [0];
-    const array2 = [1];
-    const array3 = [2];
-    const array4 = [3];
-    for (let j = 0; j < elementNumber - 3; j++) {
-      array1.push(0);
-      array2.push(0);
-      array3.push(0);
-      array4.push(0);
-    }
-    const randomElement = Math.floor(rng() * 3);
-    if (randomElement === 0) {
-      ruleSet.push(new Rule(0, array1, 1));
-  
-    } else if (randomElement === 1) {
-      ruleSet.push(new Rule(0, array2, 1));
-  
-    } else {
-      ruleSet.push(new Rule(0, array3, 1));
-      ruleSet.push(new Rule(0, array4, 1));
-    }
-  */
+
+
 
 
   for (let i = 0; i < numRules; i++) {
     // Bestimme zufällig die Länge des elementSums-Arrays (zwischen 1 und 8)
     const elementSums = [];
-
     const fromElement = Math.floor(rng() * (elementNumber - 1));
-    let sum = 0;
+    let resultElement;
+    let sum;
+
+    const value = rng();
+    if (value < 0.3 && fromElement < elementNumber - 2) {
+      //go up
+      resultElement = fromElement + 1;
+      sum = Math.floor(rng() * 5) + 1;
+    }
+    else if (value < 0.6) {
+      //same
+      resultElement = fromElement;
+      sum = Math.floor(rng() * 5) + 1;
+
+    } else if (value < 0.9 && fromElement > 0) {
+      //go down
+      resultElement = fromElement - 1;
+      sum = Math.floor(rng() * 5) + 4;
+
+    }
+    else {
+      resultElement = 0;
+      // sum 4-8
+      sum = Math.floor(rng() * 5) + 4;
+    }
+
+
+
+    let sumCounter = 0;
     for (let j = 0; j < elementNumber - 2; j++) {
 
-      const value = Math.floor(rng() * (8 - sum));
-      if (sum < 8 && value > 0 && j <= fromElement) {
-        sum += value;
+      const value = Math.floor(rng() * (sum - sumCounter));
+      if (sumCounter < sum && value > 0 && j <= fromElement) {
+        sumCounter += value;
         elementSums.push(value);
       } else {
         elementSums.push(0);
@@ -94,19 +100,7 @@ export function generateRuleSetCycle(numRules = 12, elementNumber, seed) {
     //elementSums.push(0);
 
 
-    let resultElement;
-    if (fromElement === elementNumber - 1) {
-      resultElement = 0;
-    } else if (fromElement === 0) {
-      resultElement = 1;
-    } else {
-      if (rng() < 0.4) {
-        resultElement = fromElement + 1;
-      }
-      else {
-        resultElement = 0;
-      }
-    }
+
 
 
     console.log(fromElement, elementSums, resultElement);

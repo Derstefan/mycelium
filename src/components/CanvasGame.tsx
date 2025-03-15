@@ -42,8 +42,8 @@ const CanvasGame: React.FC = () => {
     let localEConfig: any, sConfig: any, localGame: any, startPositions: any, viewer: any;
 
     function init() {
-      localEConfig = new ElementConfig(4, "dyrk");
-      sConfig = new ShroomsConfig(localEConfig.allElements, 4, 3260);
+      localEConfig = new ElementConfig(5, "dyrk");
+      sConfig = new ShroomsConfig(localEConfig.allElements, 4, 4260);
       startPositions = setStartValues(sConfig.shrooms.length, WIDTH, HEIGHT);
       localGame = new Game(localEConfig, sConfig, WIDTH, HEIGHT);
 
