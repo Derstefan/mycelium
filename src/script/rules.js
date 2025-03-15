@@ -51,39 +51,40 @@ export function generateRuleSetCycle(numRules = 12, elementNumber, seed) {
 
   //array with first element 1 length elementNumber-2
   /*
-  const array1 = [0];
-  const array2 = [1];
-  const array3 = [2];
-  const array4 = [3];
-  for (let j = 0; j < elementNumber - 3; j++) {
-    array1.push(0);
-    array2.push(0);
-    array3.push(0);
-    array4.push(0);
-  }
-  const randomElement = Math.floor(rng() * 3);
-  if (randomElement === 0) {
-    ruleSet.push(new Rule(0, array1, 1));
+    const array1 = [0];
+    const array2 = [1];
+    const array3 = [2];
+    const array4 = [3];
+    for (let j = 0; j < elementNumber - 3; j++) {
+      array1.push(0);
+      array2.push(0);
+      array3.push(0);
+      array4.push(0);
+    }
+    const randomElement = Math.floor(rng() * 3);
+    if (randomElement === 0) {
+      ruleSet.push(new Rule(0, array1, 1));
+  
+    } else if (randomElement === 1) {
+      ruleSet.push(new Rule(0, array2, 1));
+  
+    } else {
+      ruleSet.push(new Rule(0, array3, 1));
+      ruleSet.push(new Rule(0, array4, 1));
+    }
+  */
 
-  } else if (randomElement === 1) {
-    ruleSet.push(new Rule(0, array2, 1));
-
-  } else {
-    ruleSet.push(new Rule(0, array3, 1));
-    ruleSet.push(new Rule(0, array4, 1));
-  }
-
-*/
 
   for (let i = 0; i < numRules; i++) {
     // Bestimme zufällig die Länge des elementSums-Arrays (zwischen 1 und 8)
     const elementSums = [];
 
+    const fromElement = Math.floor(rng() * (elementNumber - 1));
     let sum = 0;
     for (let j = 0; j < elementNumber - 2; j++) {
 
       const value = Math.floor(rng() * (8 - sum));
-      if (sum < 8 && value > 0) {
+      if (sum < 8 && value > 0 && j <= fromElement) {
         sum += value;
         elementSums.push(value);
       } else {
@@ -92,7 +93,6 @@ export function generateRuleSetCycle(numRules = 12, elementNumber, seed) {
     }
     //elementSums.push(0);
 
-    const fromElement = Math.floor(rng() * (elementNumber - 1));
 
     let resultElement;
     if (fromElement === elementNumber - 1) {
@@ -100,11 +100,11 @@ export function generateRuleSetCycle(numRules = 12, elementNumber, seed) {
     } else if (fromElement === 0) {
       resultElement = 1;
     } else {
-      if (rng() < 0.8) {
+      if (rng() < 0.4) {
         resultElement = fromElement + 1;
       }
       else {
-        resultElement = fromElement;
+        resultElement = 0;
       }
     }
 
