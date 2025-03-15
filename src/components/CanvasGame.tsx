@@ -36,14 +36,14 @@ const CanvasGame: React.FC = () => {
     if (typeof window === 'undefined') return;
 
     if (!canvasRef.current) return;
-    const WIDTH = 121;
-    const HEIGHT = 121;
+    const WIDTH = 221;
+    const HEIGHT = 221;
     // eslint-disable-next-line  @typescript-eslint/no-explicit-any
     let localEConfig: any, sConfig: any, localGame: any, startPositions: any, viewer: any;
 
     function init() {
-      localEConfig = new ElementConfig(1, "dyrk");
-      sConfig = new ShroomsConfig(localEConfig.allElements, 4, 60);
+      localEConfig = new ElementConfig(4, "dyrk");
+      sConfig = new ShroomsConfig(localEConfig.allElements, 4, 3260);
       startPositions = setStartValues(sConfig.shrooms.length, WIDTH, HEIGHT);
       localGame = new Game(localEConfig, sConfig, WIDTH, HEIGHT);
 

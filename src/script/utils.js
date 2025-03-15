@@ -77,6 +77,14 @@ export function arraysAreTheSame(a, b) {
   return true;
 }
 
+export function allElementsAreBiggerOrEqual(a, b) {
+  if (a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i++) {
+    if (a[i] < b[i]) return false;
+  }
+  return true;
+}
+
 export function isWithinRadius(x, y, clickedX, clickedY, d) {
   return Math.sqrt((x - clickedX) ** 2 + (y - clickedY) ** 2) <= d;
 }

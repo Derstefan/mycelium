@@ -40,6 +40,87 @@ export function generateRuleSet(numRules = 12, elementNumber, seed) {
   return minimizeRuleSet(uniqueRules);
 }
 
+// Erzeugt ein zufälliges Regelset basierend auf einem Seed
+export function generateRuleSetCycle(numRules = 12, elementNumber, seed) {
+  if (seed === undefined || seed === null) {
+    seed = Math.random() + "";
+  }
+  //console.log("Seed:", seed);
+  let rng = createSeededRandom(seed);
+  const ruleSet = [];
+
+  //array with first element 1 length elementNumber-2
+  /*
+  const array1 = [0];
+  const array2 = [1];
+  const array3 = [2];
+  const array4 = [3];
+  for (let j = 0; j < elementNumber - 3; j++) {
+    array1.push(0);
+    array2.push(0);
+    array3.push(0);
+    array4.push(0);
+  }
+  const randomElement = Math.floor(rng() * 3);
+  if (randomElement === 0) {
+    ruleSet.push(new Rule(0, array1, 1));
+
+  } else if (randomElement === 1) {
+    ruleSet.push(new Rule(0, array2, 1));
+
+  } else {
+    ruleSet.push(new Rule(0, array3, 1));
+    ruleSet.push(new Rule(0, array4, 1));
+  }
+
+*/
+
+  for (let i = 0; i < numRules; i++) {
+    // Bestimme zufällig die Länge des elementSums-Arrays (zwischen 1 und 8)
+    const elementSums = [];
+
+    let sum = 0;
+    for (let j = 0; j < elementNumber - 2; j++) {
+
+      const value = Math.floor(rng() * (8 - sum));
+      if (sum < 8 && value > 0) {
+        sum += value;
+        elementSums.push(value);
+      } else {
+        elementSums.push(0);
+      }
+    }
+    //elementSums.push(0);
+
+    const fromElement = Math.floor(rng() * (elementNumber - 1));
+
+    let resultElement;
+    if (fromElement === elementNumber - 1) {
+      resultElement = 0;
+    } else if (fromElement === 0) {
+      resultElement = 1;
+    } else {
+      if (rng() < 0.8) {
+        resultElement = fromElement + 1;
+      }
+      else {
+        resultElement = fromElement;
+      }
+    }
+
+
+    console.log(fromElement, elementSums, resultElement);
+    // const resultElement = 1;
+    ruleSet.push(new Rule(fromElement, elementSums, resultElement));
+  }
+
+  // Entferne Duplikate
+  const uniqueRules = removeDuplicatesAndSort(ruleSet);
+
+  //  return uniqueRules;
+  return minimizeRuleSet(uniqueRules);
+}
+
 export function minimizeRuleSet(ruleSet) {
   return ruleSet.filter(rule =>
     rule.fromElement !== rule.elementId

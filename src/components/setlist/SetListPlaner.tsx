@@ -264,7 +264,7 @@ const initialRepertoire: SetlistItem[] = [
         "tempo": "100",
         "instruments": {
             "Matze": "Klari",
-            "Seppel": "Goc",
+            "Seppel": "Schlagzeug",
             "Steffo": "Gitarre",
             "LeaBirthe": "Pause",
             "Marc": "Gesang+Bass",

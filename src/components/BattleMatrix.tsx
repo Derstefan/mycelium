@@ -10,7 +10,6 @@ import { simulationData } from '../data/data';
 const gridSize = 41;
 const offset = 10;
 const evolveEnd = 100;
-const numberOfShrooms = 67;
 
 type Position = { x: number; y: number };
 
@@ -26,6 +25,10 @@ interface SimulationResult {
 
 interface BattleMatrixProps {
     eConfig: ElementConfig;
+    useRandom?: boolean;
+    randomCount?: number;
+    startId?: number;
+    endId?: number;
 }
 
 export interface BattleResult {
@@ -36,12 +39,34 @@ export interface BattleResult {
     evolveCount: number;
 }
 
-const BattleMatrix: React.FC<BattleMatrixProps> = ({ eConfig }) => {
+const BattleMatrix: React.FC<BattleMatrixProps> = ({ eConfig,
+    useRandom = true,
+    randomCount = 67,
+    startId,
+    endId }) => {
     const [shroomIndexes, setShroomIndexes] = useState<number[]>([]);
     const [matrix, setMatrix] = useState<SimulationResult[][]>([]);
     const [loading, setLoading] = useState(true);
     const [progress, setProgress] = useState<number>(0);
     const [copyFeedback, setCopyFeedback] = useState<string>('');
+
+    useEffect(() => {
+        let indexes: number[];
+        if (useRandom) {
+            indexes = Array.from({ length: randomCount }, () =>
+                Math.floor(Math.random() * 12188)
+            );
+        } else {
+            if (startId === undefined || endId === undefined) {
+                console.error('startId and endId are required when useRandom is false');
+                indexes = [];
+            } else {
+                const count = endId - startId + 1;
+                indexes = Array.from({ length: count }, (_, i) => startId + i);
+            }
+        }
+        setShroomIndexes(indexes);
+    }, [useRandom, randomCount, startId, endId]);
 
     // Generates the array of battle results (to be copied)
     const generateResultsArray = (): BattleResult[] => {
@@ -49,7 +74,7 @@ const BattleMatrix: React.FC<BattleMatrixProps> = ({ eConfig }) => {
 
         shroomIndexes.forEach((id1, i) => {
             shroomIndexes.forEach((id2, j) => {
-                if (i === j) return; // skip same shroom battles
+                if (i === j) return;
 
                 const cell = matrix[i][j];
                 const winnerId = cell.ratio > 0.5 ? id1 : cell.ratio < 0.5 ? id2 : null;
@@ -81,13 +106,6 @@ const BattleMatrix: React.FC<BattleMatrixProps> = ({ eConfig }) => {
         setTimeout(() => setCopyFeedback(''), 2000);
     };
 
-    // Initialize shroom indexes on mount
-    useEffect(() => {
-        const indexes = Array.from({ length: numberOfShrooms }, () =>
-            Math.floor(Math.random() * 12188)
-        );
-        setShroomIndexes(indexes);
-    }, []);
 
     // Helper: mirror a SimulationResult (flip the ratio)
     const mirrorResult = (original: SimulationResult): SimulationResult => ({
@@ -195,7 +213,9 @@ const BattleMatrix: React.FC<BattleMatrixProps> = ({ eConfig }) => {
 
     return (
         <div className="p-4 bg-gray-900 text-white overflow-auto">
-            <h2 className="text-xl mb-4">Battle Matrix ({evolveEnd} Evolutionsschritte)</h2>
+            <h2 className="text-xl mb-4">
+                Battle Matrix ({evolveEnd} Evolutionsschritte) - {shroomIndexes.length} Shrooms
+            </h2>
             {loading ? (
                 <div className="w-full">
                     <div className="mb-2">Lade Simulation... ({progress}%)</div>

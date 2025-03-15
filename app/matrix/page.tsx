@@ -13,7 +13,12 @@ export default function Page() {
     return (
         <div className="min-h-screen flex flex-col items-center justify-center p-4">
             <h1 className="text-2xl font-bold mb-4">Simulator</h1>
-            <BattleMatrix eConfig={eConfig} />
+            <BattleMatrix
+                eConfig={eConfig}
+                useRandom={false}
+                startId={300}
+                endId={350}
+            />
         </div>
     );
 }
