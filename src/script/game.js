@@ -75,7 +75,14 @@ export class Game {
     this.data[x][y - 1] = new Field(1, shroomId);
 
     this.data[x][y + 1] = new Field(1, shroomId);
+  }
 
+  putWall(x1, y1, x2, y2) {
+    for (let x = x1; x <= x2; x++) {
+      for (let y = y1; y <= y2; y++) {
+        this.data[x][y] = new Field(1, -1);
+      }
+    }
   }
 
 

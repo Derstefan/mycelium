@@ -1,11 +1,18 @@
 import React, { useEffect, useRef, useState, MouseEvent } from 'react';
-import { simulationData } from '../data/data';
 import { generateSeededColor } from '../script/utils';
 
-//const evolveEnd = 100;
-const scale = 3; // 3px per unit
-const maxCoord = 2187; // 0 to 12187 => 12188 units
-const canvasSize = maxCoord * scale; // total pixel size
+const scale = 3; // 3px pro Einheit
+const maxCoord = 2187; // Beispielwert: maximaler Wert der Koordinaten
+const canvasSize = maxCoord * scale; // Gesamtgröße in Pixel
+
+// Schnittstelle für einen BattleResult-Eintrag
+interface BattleResult {
+    id1: number;
+    id2: number;
+    ratio: number;
+    winnerId: number | null;
+    evolveCount: number;
+}
 
 interface TooltipData {
     visible: boolean;
@@ -22,46 +29,93 @@ const SimulationMatrix: React.FC = () => {
         y: 0,
         content: ''
     });
+    // Zustand für die aus der DB geladenen Daten
+    const [simulationResults, setSimulationResults] = useState<BattleResult[]>([]);
 
-    // Pre-calculate canvas points from simulationData
-    const points = simulationData.map((data, index) => {
-        const { id1, id2, winnerId } = data;
-        let color = '#808080'; // default for tie
-        if (winnerId === id1) {
-            color = generateSeededColor(id1);
-        } else if (winnerId === id2) {
-            color = generateSeededColor(id2);
+    // Funktion zum Laden der Daten aus der Datenbank via API-Route (GET)
+    const fetchSimulationResults = async () => {
+        try {
+            const response = await fetch('/api/battleresults');
+            if (response.ok) {
+                const data = await response.json();
+                // Hier gehen wir davon aus, dass die API { success, data } liefert oder direkt ein Array
+                setSimulationResults(data.data || data);
+            } else {
+                console.error('Fehler beim Laden der Daten:', response.statusText);
+            }
+        } catch (error) {
+            console.error('Fehler beim Laden der Daten:', error);
         }
-        console.log(index + "/" + simulationData.length);
-        return {
-            x: id1 * scale,
-            y: id2 * scale,
-            width: scale,
-            height: scale,
-            data,
-            color
-        };
+    };
+
+    // Daten einmalig beim Start laden
+    useEffect(() => {
+        fetchSimulationResults();
+    }, []);
+    // Berechne die Canvas-Punkte inklusive gespiegelter Kopien
+    const points = simulationResults.flatMap((data) => {
+        const { id1, id2, ratio, winnerId, evolveCount } = data;
+
+        // Originaler Punkt (id1 vs id2)
+        const originalColor = winnerId === id1
+            ? generateSeededColor(id1)
+            : winnerId === id2
+                ? generateSeededColor(id2)
+                : '#808080';
+
+        // Gespiegelter Punkt (id2 vs id1)
+        const mirroredRatio = 1 - ratio;
+        const mirroredWinnerId = winnerId === id1 ? id2 : winnerId === id2 ? id1 : null;
+        const mirroredColor = mirroredWinnerId === id2
+            ? generateSeededColor(id2)
+            : mirroredWinnerId === id1
+                ? generateSeededColor(id1)
+                : '#808080';
+
+        return [
+            // Originaler Punkt
+            {
+                x: id1 * scale,
+                y: id2 * scale,
+                width: scale,
+                height: scale,
+                data,
+                color: originalColor
+            },
+            // Gespiegelter Punkt (nur wenn id1 != id2)
+            ...(id1 !== id2 ? [{
+                x: id2 * scale,
+                y: id1 * scale,
+                width: scale,
+                height: scale,
+                data: {
+                    id1: id2,
+                    id2: id1,
+                    ratio: mirroredRatio,
+                    winnerId: mirroredWinnerId,
+                    evolveCount
+                },
+                color: originalColor
+            }] : [])
+        ];
     });
 
-    // Draw all points on the canvas
+    // Zeichne alle Punkte in den Canvas, wenn sich die Daten ändern
     useEffect(() => {
         const canvas = canvasRef.current;
         if (!canvas) return;
         const ctx = canvas.getContext('2d');
         if (!ctx) return;
 
-        // Clear canvas
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        // Draw each point as a filled rectangle
         points.forEach((pt) => {
-            ctx.fillStyle = pt.color;
+            ctx.fillStyle = `${pt.data.ratio > 0.7 || pt.data.ratio < 0.3 ? pt.color : pt.data.ratio > 0.55 || pt.data.ratio < 0.45 ? pt.color + '80' : '#505050'}`;
             ctx.fillRect(pt.x, pt.y, pt.width, pt.height);
         });
     }, [points]);
 
-    // Helper to check if the mouse is over a point
+    // Hilfsfunktion: Liefert den Punkt, über dem sich die Maus befindet
     const getPointAt = (x: number, y: number) => {
-        // You could optimize this further with spatial indexing if needed.
         return points.find(
             (pt) =>
                 x >= pt.x &&
@@ -71,21 +125,18 @@ const SimulationMatrix: React.FC = () => {
         );
     };
 
-    // Handle mouse movement over the canvas
+    // Zeige den Tooltip, falls die Maus über einem Punkt schwebt
     const handleMouseMove = (e: MouseEvent<HTMLCanvasElement>) => {
         const canvas = canvasRef.current;
         if (!canvas) return;
         const rect = canvas.getBoundingClientRect();
-        // Convert mouse position to canvas coordinate system
         const x = e.clientX - rect.left;
         const y = e.clientY - rect.top;
-
         const found = getPointAt(x, y);
         if (found) {
             const { id1, id2, ratio, evolveCount } = found.data;
             setTooltip({
                 visible: true,
-                // position tooltip relative to the container
                 x: e.clientX + 10,
                 y: e.clientY + 10,
                 content: `id1: ${id1}, id2: ${id2}, ratio: ${(ratio * 100).toFixed(1)}%, evolve: ${evolveCount}`
@@ -106,7 +157,7 @@ const SimulationMatrix: React.FC = () => {
                 width: '100vw',
                 height: '100vh',
                 position: 'relative',
-                backgroundColor: '#000' // black background for empty cells
+                backgroundColor: '#000'
             }}
         >
             <canvas

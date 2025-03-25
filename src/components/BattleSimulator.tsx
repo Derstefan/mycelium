@@ -6,6 +6,11 @@ import { Viewer } from '../script/view';
 import { Game } from '../script/game';
 import { ElementConfig } from '../script/models';
 import { generateSeededColor } from '../script/utils';
+import { mapNumberToMycelName, parseMycelName } from '../script/namegenerator';
+
+
+
+/* --- Ende der Umrechnungsfunktionen --- */
 
 interface BattleSimulatorProps {
     shroomIndex1: number;
@@ -27,29 +32,31 @@ const BattleSimulator: React.FC<BattleSimulatorProps> = ({ shroomIndex1, shroomI
         shroom1: [],
         shroom2: []
     });
+
+    // Statt nur der Zahl führen wir hier zusätzlich den zugehörigen Namen als Text
     const [sliderIndex1, setSliderIndex1] = useState(shroomIndex1);
     const [sliderIndex2, setSliderIndex2] = useState(shroomIndex2);
-    // State for current simulation indexes (used to generate new rules/colors)
+    const [inputText1, setInputText1] = useState<string>(mapNumberToMycelName(shroomIndex1) || "");
+    const [inputText2, setInputText2] = useState<string>(mapNumberToMycelName(shroomIndex2) || "");
+
+    // State für aktuelle Simulationseinstellungen
     const [index1, setIndex1] = useState(shroomIndex1);
     const [index2, setIndex2] = useState(shroomIndex2);
-
-    // Compute colors based on current indexes
     const [shroomColor1, setShroomColor1] = useState(generateSeededColor(shroomIndex1));
     const [shroomColor2, setShroomColor2] = useState(generateSeededColor(shroomIndex2));
-
     const simulationInterval = useRef<NodeJS.Timeout | null>(null);
     const chartData = useRef<number[]>([]);
     const maxDataPoints = 1000;
     const [isSimulating, setIsSimulating] = useState(false);
 
-    // Refs for input fields
+    // Refs für Input-Felder (falls weitere Steuerung nötig ist)
     const sliderInput1Ref = useRef<HTMLInputElement>(null);
     const sliderInput2Ref = useRef<HTMLInputElement>(null);
 
-    // New state for starting position type
+    // Neue State-Variable für Startposition
     const [positionType, setPositionType] = useState<'diagonal' | 'stacked' | 'random'>('diagonal');
 
-    // Helper: get starting positions based on selection.
+    // Hilfsfunktion: Bestimme Startpositionen
     const getStartPositions = (): [Position, Position] => {
         if (positionType === 'diagonal') {
             return [
@@ -69,20 +76,17 @@ const BattleSimulator: React.FC<BattleSimulatorProps> = ({ shroomIndex1, shroomI
             });
             return [randomPos(), randomPos()];
         }
-        // Fallback: diagonal
         return [
             { x: offset, y: offset },
             { x: gridSize - offset, y: gridSize - offset }
         ];
     };
 
-    // Function to run one simulation step
+    // Simulation Schritt
     const runSimulation = () => {
         if (!gameRef.current) return;
-
         gameRef.current.evolveAllShrooms(1);
         viewerRef.current?.render();
-
         gameRef.current.count();
         const currentCounts = gameRef.current.sCount;
         setCounts(prev => ({
@@ -93,20 +97,17 @@ const BattleSimulator: React.FC<BattleSimulatorProps> = ({ shroomIndex1, shroomI
         chartData.current = [...chartData.current, ratio].slice(-maxDataPoints);
         drawChart();
 
-        // Automatically stop if one shroom takes over (0% or 100%)
         if (ratio === 0 || ratio === 1) {
             stopSimulation();
         }
     };
 
-    // Start automatic simulation (runs a step every 50ms)
     const startSimulation = () => {
-        if (simulationInterval.current) return; // already running
+        if (simulationInterval.current) return;
         simulationInterval.current = setInterval(runSimulation, 50);
         setIsSimulating(true);
     };
 
-    // Stop the automatic simulation
     const stopSimulation = () => {
         if (simulationInterval.current) {
             clearInterval(simulationInterval.current);
@@ -115,13 +116,11 @@ const BattleSimulator: React.FC<BattleSimulatorProps> = ({ shroomIndex1, shroomI
         setIsSimulating(false);
     };
 
-    // Manually run one simulation step (only when simulation is stopped)
     const stepSimulation = () => {
         runSimulation();
     };
 
-    // Reset simulation logic to update indexes/colors and clear data.
-    // Optionally accepts newIndex1/newIndex2 for a fresh reset.
+    // Bei Reset werden Index, Farben und Input-Texte aktualisiert.
     const handleReset = (newIndex1?: number, newIndex2?: number) => {
         if (!gameRef.current) {
             console.warn('Game not initialized yet!');
@@ -133,11 +132,17 @@ const BattleSimulator: React.FC<BattleSimulatorProps> = ({ shroomIndex1, shroomI
             setShroomColor2(generateSeededColor(newIndex2));
             setIndex1(newIndex1);
             setIndex2(newIndex2);
+            setSliderIndex1(newIndex1);
+            setSliderIndex2(newIndex2);
+            setInputText1(mapNumberToMycelName(newIndex1) || "");
+            setInputText2(mapNumberToMycelName(newIndex2) || "");
         } else {
             setShroomColor1(generateSeededColor(sliderIndex1));
             setShroomColor2(generateSeededColor(sliderIndex2));
             setIndex1(sliderIndex1);
             setIndex2(sliderIndex2);
+            setInputText1(mapNumberToMycelName(sliderIndex1) || "");
+            setInputText2(mapNumberToMycelName(sliderIndex2) || "");
         }
         gameRef.current.cleanData();
         gameRef.current.shroomStartValues(getStartPositions());
@@ -147,21 +152,42 @@ const BattleSimulator: React.FC<BattleSimulatorProps> = ({ shroomIndex1, shroomI
         gameRef.current.count();
     };
 
-    // New: Randomize the shroomIndexes using dice emoji button.
+    // Zufällige Index-Wahl via Würfel-Button
     const handleRandomizeIndexes = () => {
         const random1 = Math.floor(Math.random() * 12188);
         const random2 = Math.floor(Math.random() * 12188);
         setSliderIndex1(random1);
         setSliderIndex2(random2);
+        setInputText1(mapNumberToMycelName(random1) || "");
+        setInputText2(mapNumberToMycelName(random2) || "");
         handleReset(random1, random2);
     };
 
-    // Handle key events for input fields: Enter resets and arrow keys switch focus.
     const handleInputKeyDown = (
         e: React.KeyboardEvent<HTMLInputElement>,
         field: 'slider1' | 'slider2'
     ) => {
         if (e.key === 'Enter') {
+            const value = field === 'slider1' ? inputText1 : inputText2;
+            let parsed: number | null = null;
+            if (!isNaN(Number(value))) {
+                parsed = parseInt(value, 10);
+                console.log(parsed);
+            } else {
+                parsed = parseMycelName(value);
+                console.log(parsed);
+            }
+            if (parsed !== null && parsed >= 0 && parsed <= 12187) {
+                if (field === 'slider1') {
+                    setSliderIndex1(parsed);
+                    const standardized = mapNumberToMycelName(parsed);
+                    setInputText1(standardized || value);
+                } else {
+                    setSliderIndex2(parsed);
+                    const standardized = mapNumberToMycelName(parsed);
+                    setInputText2(standardized || value);
+                }
+            }
             handleReset();
         } else if (field === 'slider1' && e.key === 'ArrowDown') {
             sliderInput2Ref.current?.focus();
@@ -170,13 +196,12 @@ const BattleSimulator: React.FC<BattleSimulatorProps> = ({ shroomIndex1, shroomI
         }
     };
 
-    // When position type changes, update state and reset automatically.
     const handlePositionTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         setPositionType(e.target.value as 'diagonal' | 'stacked' | 'random');
         handleReset();
     };
 
-    // Initialize game and viewer when indexes, colors, config, or positionType change.
+    // Beim Initialisieren oder bei Änderungen neu aufsetzen
     useEffect(() => {
         stopSimulation();
         const initGame = () => {
@@ -197,6 +222,7 @@ const BattleSimulator: React.FC<BattleSimulatorProps> = ({ shroomIndex1, shroomI
             );
 
             newGame.shroomStartValues(getStartPositions());
+            //newGame.putWall(10, 10, 80, 10);
             const newViewer = new Viewer(newGame, canvas);
             gameRef.current = newGame;
             viewerRef.current = newViewer;
@@ -215,7 +241,6 @@ const BattleSimulator: React.FC<BattleSimulatorProps> = ({ shroomIndex1, shroomI
         };
     }, [index1, index2, eConfig, shroomColor1, shroomColor2, positionType]);
 
-    // Chart drawing function
     const drawChart = () => {
         const canvas = chartRef.current;
         if (!canvas) return;
@@ -233,7 +258,7 @@ const BattleSimulator: React.FC<BattleSimulatorProps> = ({ shroomIndex1, shroomI
 
         const visibleData = chartData.current;
 
-        // Shroom1 filled area (below the line)
+        // Bereich Shroom1
         ctx.beginPath();
         ctx.moveTo(margin, margin + chartHeight);
         visibleData.forEach((ratio, index) => {
@@ -246,7 +271,7 @@ const BattleSimulator: React.FC<BattleSimulatorProps> = ({ shroomIndex1, shroomI
         ctx.fillStyle = `${shroomColor1}60`;
         ctx.fill();
 
-        // Shroom2 filled area (above the line)
+        // Bereich Shroom2
         ctx.beginPath();
         ctx.moveTo(margin, margin);
         visibleData.forEach((ratio, index) => {
@@ -259,7 +284,7 @@ const BattleSimulator: React.FC<BattleSimulatorProps> = ({ shroomIndex1, shroomI
         ctx.fillStyle = `${shroomColor2}60`;
         ctx.fill();
 
-        // Draw grid
+        // Raster
         ctx.strokeStyle = '#444';
         ctx.beginPath();
         ctx.moveTo(margin, margin);
@@ -267,7 +292,7 @@ const BattleSimulator: React.FC<BattleSimulatorProps> = ({ shroomIndex1, shroomI
         ctx.lineTo(margin + chartWidth, margin + chartHeight);
         ctx.stroke();
 
-        // Draw ratio line
+        // Verhältnis-Linie
         ctx.beginPath();
         ctx.strokeStyle = '#fff';
         ctx.lineWidth = 2;
@@ -282,7 +307,7 @@ const BattleSimulator: React.FC<BattleSimulatorProps> = ({ shroomIndex1, shroomI
         });
         ctx.stroke();
 
-        // Draw current ratio text
+        // Aktuelles Verhältnis als Text
         ctx.fillStyle = '#fff';
         ctx.font = '14px monospace';
         const currentRatio = visibleData[visibleData.length - 1] || 0;
@@ -293,40 +318,40 @@ const BattleSimulator: React.FC<BattleSimulatorProps> = ({ shroomIndex1, shroomI
         );
     };
 
+    // Handler für die Textfelder: Wenn der Benutzer etwas eingibt (entweder Zahl oder Name),
+    // wird versucht, diesen Input in einen gültigen Index zu konvertieren und der standardisierte Name
+    // angezeigt.
+    const handleInputChange1 = (value: string) => {
+        setInputText1(value);
+
+    };
+
+    const handleInputChange2 = (value: string) => {
+        setInputText2(value);
+
+    };
+
     return (
         <div className="flex flex-col items-center p-4 bg-gray-900">
             <div className="flex items-center mb-2">
-                <span className="text-gray-500 mr-2">#</span>
+                {/* Hier werden die Textfelder verwendet – sie zeigen den Pilznamen an */}
                 <input
                     ref={sliderInput1Ref}
                     type="text"
-                    value={sliderIndex1}
-                    onChange={e => {
-                        if (e.target.value === "") setSliderIndex1(0);
-                        if (isNaN(parseInt(e.target.value))) return;
-                        let value = Math.floor(parseInt(e.target.value));
-                        if (value < 0) value = 0;
-                        if (value > 12187) value = 12187;
-                        setSliderIndex1(value);
-                    }}
-                    className="bg-gray-800 text-white p-1 rounded"
+                    value={inputText1}
+                    onChange={e => handleInputChange1(e.target.value)}
+                    placeholder="#id or name"
+                    className="bg-gray-800 text-white p-1 rounded mr-4"
                     onKeyDown={e => handleInputKeyDown(e, 'slider1')}
                 />
                 <span className="mx-4 text-gray-500">vs</span>
-                <span className="text-gray-500 mr-2">#</span>
                 <input
                     ref={sliderInput2Ref}
                     type="text"
-                    value={sliderIndex2}
-                    onChange={e => {
-                        if (e.target.value === "") setSliderIndex2(0);
-                        if (isNaN(parseInt(e.target.value))) return;
-                        let value = Math.floor(parseInt(e.target.value));
-                        if (value < 0) value = 0;
-                        if (value > 12187) value = 12187;
-                        setSliderIndex2(value);
-                    }}
-                    className="bg-gray-800 text-white p-1 rounded"
+                    value={inputText2}
+                    onChange={e => handleInputChange2(e.target.value)}
+                    placeholder="#id or name"
+                    className="bg-gray-800 text-white p-1 rounded ml-4"
                     onKeyDown={e => handleInputKeyDown(e, 'slider2')}
                 />
             </div>
@@ -386,7 +411,6 @@ const BattleSimulator: React.FC<BattleSimulatorProps> = ({ shroomIndex1, shroomI
                 className="border-2 border-gray-700 rounded-lg"
             />
 
-            {/* Dropdown and Random button for starting positions */}
             <div className="mt-4 flex items-center">
                 <label htmlFor="positionType" className="text-white mr-2">
                     start position:
