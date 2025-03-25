@@ -11,7 +11,6 @@ export async function GET() {
         const results = await BattleResult.find({});
         return NextResponse.json({ success: true, data: results }, { status: 200 });
         // @typescript-eslint/no-explicit-any
-
     } catch (error: any) {
         return NextResponse.json({ success: false, error: error.message }, { status: 500 });
     }
