@@ -66,11 +66,7 @@ const SimulationMatrix: React.FC = () => {
         // Gespiegelter Punkt (id2 vs id1)
         const mirroredRatio = 1 - ratio;
         const mirroredWinnerId = winnerId === id1 ? id2 : winnerId === id2 ? id1 : null;
-        const mirroredColor = mirroredWinnerId === id2
-            ? generateSeededColor(id2)
-            : mirroredWinnerId === id1
-                ? generateSeededColor(id1)
-                : '#808080';
+
 
         return [
             // Originaler Punkt

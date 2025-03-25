@@ -4,7 +4,6 @@
 import { useEffect, useState } from "react";
 import BattleSimulator from "@/src/components/BattleSimulator";
 import { ElementConfig } from "@/src/script/models";
-import { mapNumberToMycelName, parseMycelName } from "@/src/script/namegenerator";
 
 export default function RandomShroomsPage() {
     const [indices, setIndices] = useState<[number, number] | null>(null);
