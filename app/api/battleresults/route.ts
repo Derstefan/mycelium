@@ -10,7 +10,7 @@ export async function GET() {
     try {
         const results = await BattleResult.find({});
         return NextResponse.json({ success: true, data: results }, { status: 200 });
-        // @typescript-eslint/no-explicit-any
+        /* eslint-disable  no-explicit-any */
     } catch (error: any) {
         return NextResponse.json({ success: false, error: error.message }, { status: 500 });
     }
@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
         const savedResults = await BattleResult.insertMany(results);
         console.log('Eingefügte Einträge:', savedResults.length);
         return NextResponse.json({ success: true, data: savedResults }, { status: 201 });
-        // @typescript-eslint/no-explicit-any
+        /* eslint-disable  no-explicit-any */
     } catch (error: any) {
         console.warn('Fehler beim Einfügen:', error.message);
         return NextResponse.json({ success: false, error: error.message }, { status: 400 });
