@@ -10,7 +10,6 @@ export async function GET() {
     try {
         const results = await BattleResult.find({});
         return NextResponse.json({ success: true, data: results }, { status: 200 });
-        /* eslint-disable  no-explicit-any */
     } catch (error: unknown) {
         const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
         return NextResponse.json({ success: false, error: errorMessage }, { status: 500 });
