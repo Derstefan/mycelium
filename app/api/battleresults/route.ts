@@ -11,8 +11,9 @@ export async function GET() {
         const results = await BattleResult.find({});
         return NextResponse.json({ success: true, data: results }, { status: 200 });
         /* eslint-disable  no-explicit-any */
-    } catch (error: any) {
-        return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+        return NextResponse.json({ success: false, error: errorMessage }, { status: 500 });
     }
 }
 
@@ -25,9 +26,9 @@ export async function POST(req: NextRequest) {
         const savedResults = await BattleResult.insertMany(results);
         console.log('Eingefügte Einträge:', savedResults.length);
         return NextResponse.json({ success: true, data: savedResults }, { status: 201 });
-        /* eslint-disable  no-explicit-any */
-    } catch (error: any) {
-        console.warn('Fehler beim Einfügen:', error.message);
-        return NextResponse.json({ success: false, error: error.message }, { status: 400 });
+    } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+        console.warn('Fehler beim Einfügen:', errorMessage);
+        return NextResponse.json({ success: false, error: errorMessage }, { status: 400 });
     }
 }

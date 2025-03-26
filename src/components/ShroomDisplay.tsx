@@ -6,6 +6,7 @@ import { Viewer } from '../script/view';
 import { Game } from '../script/game';
 import { ElementConfig } from '../script/models';
 import { generateSeededColor } from '../script/utils';
+import { mapNumberToMycelName } from '../script/namegenerator';
 
 interface ShroomDisplayProps {
     index: number;
@@ -143,7 +144,7 @@ const ShroomDisplay: React.FC<ShroomDisplayProps> = ({ index, ruleEncoded, shroo
                             navigator.clipboard.writeText(index + "");
                             setLog('Copied Id');
                             setTimeout(() => setLog(''), 1500);
-                        }}>#{index}</span>
+                        }}>#{mapNumberToMycelName(index)}</span>
                     <span className="text-xs text-gray-400 ml-2">{log}</span>
                     <button className='position-right bg-gray-700 p-2 rounded-lg cursor-pointer hover:bg-gray-600 transition-colors m-2'
                         onClick={() => addSelectedShroom ? addSelectedShroom(index) : null}>add</button>
