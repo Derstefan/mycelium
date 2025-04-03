@@ -7,7 +7,7 @@ import { Game } from '../script/game';
 import { ElementConfig } from '../script/models';
 import { generateSeededColor } from '../script/utils';
 import { mapNumberToMycelName, parseMycelName } from '../script/namegenerator';
-
+import { ShroomHoverCard } from './mycel/ShroomHoverCard';
 
 
 /* --- Ende der Umrechnungsfunktionen --- */
@@ -56,6 +56,36 @@ const BattleSimulator: React.FC<BattleSimulatorProps> = ({ shroomIndex1, shroomI
     // Neue State-Variable für Startposition
     const [positionType, setPositionType] = useState<'diagonal' | 'stacked' | 'random'>('diagonal');
 
+    const [stats, setStats] = useState<{
+        shroom1: { expand: number; dissolve: number };
+        shroom2: { expand: number; dissolve: number };
+    }>({
+        shroom1: { expand: 0, dissolve: 0 },
+        shroom2: { expand: 0, dissolve: 0 },
+    });
+
+    const [isHovering1, setIsHovering1] = useState(false);
+    const [isHovering2, setIsHovering2] = useState(false);
+
+    const [tempIndex1, setTempIndex1] = useState(shroomIndex1);
+    const [tempIndex2, setTempIndex2] = useState(shroomIndex2);
+    const [log, setLog] = useState<string>('');
+
+    useEffect(() => {
+        const ruleSet1 = generateRuleSetByIndex(index1);
+        const ruleSet2 = generateRuleSetByIndex(index2);
+        setStats({
+            shroom1: {
+                expand: ruleSet1.expansionStrength,
+                dissolve: ruleSet1.dissolveStrength,
+            },
+            shroom2: {
+                expand: ruleSet2.expansionStrength,
+                dissolve: ruleSet2.dissolveStrength,
+            },
+        });
+    }, [index1, index2]);
+
     // Hilfsfunktion: Bestimme Startpositionen
     const getStartPositions = (): [Position, Position] => {
         if (positionType === 'diagonal') {
@@ -97,7 +127,7 @@ const BattleSimulator: React.FC<BattleSimulatorProps> = ({ shroomIndex1, shroomI
         chartData.current = [...chartData.current, ratio].slice(-maxDataPoints);
         drawChart();
 
-        if (ratio === 0 || ratio === 1) {
+        if ((ratio === 0 || ratio === 1)) {
             stopSimulation();
         }
     };
@@ -152,10 +182,18 @@ const BattleSimulator: React.FC<BattleSimulatorProps> = ({ shroomIndex1, shroomI
         gameRef.current.count();
     };
 
+    const assignNewShromms = () => {
+        setIndex1(tempIndex1)
+        setIndex2(tempIndex2)
+        setShroomColor1(generateSeededColor(tempIndex1))
+        setShroomColor2(generateSeededColor(tempIndex2))
+        setInputText1(mapNumberToMycelName(tempIndex1) || "")
+        setInputText2(mapNumberToMycelName(tempIndex2) || "")
+    }
     // Zufällige Index-Wahl via Würfel-Button
     const handleRandomizeIndexes = () => {
-        const random1 = Math.floor(Math.random() * 12188);
-        const random2 = Math.floor(Math.random() * 12188);
+        const random1 = Math.floor(Math.random() * 65536);
+        const random2 = Math.floor(Math.random() * 65536);
         setSliderIndex1(random1);
         setSliderIndex2(random2);
         setInputText1(mapNumberToMycelName(random1) || "");
@@ -168,6 +206,7 @@ const BattleSimulator: React.FC<BattleSimulatorProps> = ({ shroomIndex1, shroomI
         field: 'slider1' | 'slider2'
     ) => {
         if (e.key === 'Enter') {
+            stopSimulation();
             const value = field === 'slider1' ? inputText1 : inputText2;
             let parsed: number | null = null;
             if (!isNaN(Number(value))) {
@@ -177,7 +216,7 @@ const BattleSimulator: React.FC<BattleSimulatorProps> = ({ shroomIndex1, shroomI
                 parsed = parseMycelName(value);
                 console.log(parsed);
             }
-            if (parsed !== null && parsed >= 0 && parsed <= 12187) {
+            if (parsed !== null && parsed >= 0 && parsed <= 65536) {
                 if (field === 'slider1') {
                     setSliderIndex1(parsed);
                     const standardized = mapNumberToMycelName(parsed);
@@ -188,7 +227,6 @@ const BattleSimulator: React.FC<BattleSimulatorProps> = ({ shroomIndex1, shroomI
                     setInputText2(standardized || value);
                 }
             }
-            handleReset();
         } else if (field === 'slider1' && e.key === 'ArrowDown') {
             sliderInput2Ref.current?.focus();
         } else if (field === 'slider2' && e.key === 'ArrowUp') {
@@ -322,11 +360,13 @@ const BattleSimulator: React.FC<BattleSimulatorProps> = ({ shroomIndex1, shroomI
     // wird versucht, diesen Input in einen gültigen Index zu konvertieren und der standardisierte Name
     // angezeigt.
     const handleInputChange1 = (value: string) => {
+        stopSimulation();
         setInputText1(value);
 
     };
 
     const handleInputChange2 = (value: string) => {
+        stopSimulation();
         setInputText2(value);
 
     };
@@ -334,26 +374,93 @@ const BattleSimulator: React.FC<BattleSimulatorProps> = ({ shroomIndex1, shroomI
     return (
         <div className="flex flex-col items-center p-4 bg-gray-900">
             <div className="flex items-center mb-2">
-                {/* Hier werden die Textfelder verwendet – sie zeigen den Pilznamen an */}
-                <input
-                    ref={sliderInput1Ref}
-                    type="text"
-                    value={inputText1}
-                    onChange={e => handleInputChange1(e.target.value)}
-                    placeholder="#id or name"
-                    className="bg-gray-800 text-white p-1 rounded mr-4"
-                    onKeyDown={e => handleInputKeyDown(e, 'slider1')}
-                />
-                <span className="mx-4 text-gray-500">vs</span>
-                <input
-                    ref={sliderInput2Ref}
-                    type="text"
-                    value={inputText2}
-                    onChange={e => handleInputChange2(e.target.value)}
-                    placeholder="#id or name"
-                    className="bg-gray-800 text-white p-1 rounded ml-4"
-                    onKeyDown={e => handleInputKeyDown(e, 'slider2')}
-                />
+                <div className="flex items-center mb-2">
+
+                    <div className="flex items-center mb-2">
+                        {/* Input 1 mit Hover Card */}
+                        <div className="relative" onMouseLeave={() => {
+                            setIsHovering1(false)
+                        }}>
+                            <input
+                                ref={sliderInput1Ref}
+                                type="text"
+                                value={inputText1}
+                                onChange={e => handleInputChange1(e.target.value)}
+                                placeholder="#id or name"
+                                className="bg-gray-800 text-white p-1 rounded mr-4"
+                                onKeyDown={e => handleInputKeyDown(e, 'slider1')}
+                                onMouseEnter={() => {
+                                    setIsHovering1(true)
+                                    stopSimulation()
+                                }}
+                            />
+                            {isHovering1 && (
+                                <div className="absolute top-full left-0">
+                                    <ShroomHoverCard
+                                        id={index1}
+                                        shroomColor={shroomColor1}
+                                        log={log}
+                                        setLog={setLog}
+                                        setIndex={setTempIndex1}
+                                        go={(index: number) => {
+                                            setIndex1(index)
+                                        }}
+                                        goAndReset={(index: number) => {
+                                            console.log("goAndReset", index, index2)
+                                            setIndex1(index)
+                                            handleReset(index, index2)
+                                            setIsHovering1(false)
+
+                                        }}
+                                    />
+                                </div>
+                            )}
+                        </div>
+
+                        <span className="mx-4 text-gray-500">vs</span>
+
+                        {/* Input 2 mit Hover Card */}
+                        <div className="relative" onMouseLeave={() => {
+                            setIsHovering2(false)
+
+                        }}>
+                            <input
+                                ref={sliderInput2Ref}
+                                type="text"
+                                value={inputText2}
+                                onChange={e => handleInputChange2(e.target.value)}
+                                placeholder="#id or name"
+                                className="bg-gray-800 text-white p-1 rounded ml-4"
+                                onKeyDown={e => handleInputKeyDown(e, 'slider2')}
+                                onMouseEnter={() => {
+                                    setIsHovering2(true)
+                                    stopSimulation()
+                                }}
+                            />
+                            {isHovering2 && (
+                                <div className="absolute top-full left-0">
+                                    <ShroomHoverCard
+                                        id={index2}
+                                        shroomColor={shroomColor2}
+                                        log={log}
+                                        setLog={setLog}
+                                        setIndex={setTempIndex2}
+                                        go={(index: number) => {
+                                            setIndex2(index)
+                                        }}
+                                        goAndReset={(index: number) => {
+                                            console.log("goAndReset", index1, index)
+                                            setIndex2(index)
+                                            handleReset(index1, index)
+                                            setIsHovering2(false)
+
+                                        }}
+                                    />
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
             </div>
             <div className="flex items-center mb-2">
                 <button
@@ -433,7 +540,7 @@ const BattleSimulator: React.FC<BattleSimulatorProps> = ({ shroomIndex1, shroomI
                     🎲
                 </button>
             </div>
-        </div>
+        </div >
     );
 };
 

@@ -4,6 +4,7 @@
 import { useEffect, useState } from "react";
 import BattleSimulator from "@/src/components/BattleSimulator";
 import { ElementConfig } from "@/src/script/models";
+import { generateRuleSetByIndex, generateRuleSetByIndexExpanding, getIndexFromRuleSet } from "@/src/script/rules";
 
 export default function RandomShroomsPage() {
     const [indices, setIndices] = useState<[number, number] | null>(null);
@@ -11,9 +12,25 @@ export default function RandomShroomsPage() {
 
     useEffect(() => {
         // Wird nur client-seitig ausgeführt
+
+        //generates only expanding
+        const i1 = Math.floor(Math.random() * 12188);
+        const i2 = Math.floor(Math.random() * 12188);
+
+        const rules1 = generateRuleSetByIndexExpanding(i1);
+        const rules2 = generateRuleSetByIndexExpanding(i2);
+
+        const i1Real = getIndexFromRuleSet(rules1);
+        const i2Real = getIndexFromRuleSet(rules2);
+
+        const rules1Real = generateRuleSetByIndex(i1Real);
+        const rules2Real = generateRuleSetByIndex(i2Real);
+
+        console.log(i1, rules1, i1Real, rules1Real);
+        console.log(i2, rules2, i2Real, rules2Real);
         setIndices([
-            Math.floor(Math.random() * 12187),
-            Math.floor(Math.random() * 12187)
+            i1Real,
+            i2Real
         ]);
 
 

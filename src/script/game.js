@@ -4,7 +4,7 @@ import { arraysAreTheSame } from "./utils";
 
 
 
-const WOOD_AGE = 15; // Alter, ab dem ein Shroom nicht mehr wächst
+const WOOD_AGE = 7; // Alter, ab dem ein Shroom nicht mehr wächst
 const DIE_AGE = 33405;
 
 const INDICATOR_RADIUS = 5;

@@ -1,5 +1,5 @@
 import { createSeededRandom, generateSeededColor } from "./utils";
-import { encodeRuleSetCompact, decodeRuleSetCompact, generateRuleSet } from "./rules";
+import { encodeRuleSetCompact, decodeRuleSetCompact, generateRuleSetByIndex } from "./rules";
 
 
 export class Element {
@@ -64,7 +64,7 @@ export class ShroomsConfig {
     this.shroomColors = [];
     for (let i = 0; i < numberOfShrooms; i++) {
       const s = seededRandom() + "" + i;
-      this.shrooms.push(generateRuleSet(numberOfRules, allElements.length, s));
+      this.shrooms.push(generateRuleSetByIndex(numberOfRules, allElements.length, s));
       const index = encodeRuleSetCompact(this.shrooms[i]);
       const indexCheck = decodeRuleSetCompact(index);
       if (index !== encodeRuleSetCompact(indexCheck)) {

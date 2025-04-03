@@ -6,7 +6,7 @@ import { Viewer } from '../script/view';
 import { Game } from '../script/game';
 import { ElementConfig } from '../script/models';
 import { generateSeededColor } from '../script/utils';
-import { mapNumberToMycelName } from '../script/namegenerator';
+import { ShroomHoverCard } from './mycel/ShroomHoverCard';
 
 interface ShroomDisplayProps {
     index: number;
@@ -104,22 +104,13 @@ const ShroomDisplay: React.FC<ShroomDisplayProps> = ({ index, ruleEncoded, shroo
         };
     }, [isHovered]);
 
-    // Rest of the component remains the same...
-    const ruleGroups = ruleSet.reduce((acc: { [key: string]: number[][] }, rule) => {
-        const key = rule.fromElement === rule.elementId ?
-            `${rule.fromElement} keeps ${rule.elementId}` :
-            `${rule.fromElement} to ${rule.elementId}`;
-        if (!acc[key]) acc[key] = [];
-        acc[key].push(rule.elementSums);
-        return acc;
-    }, {});
+
 
     return (
         <div
-            className="relative flex items-center gap-3 mb-2 bg-gray-900 p-4 rounded-xl shadow-lg border border-gray-700 "
+            className="relative flex items-center gap-3 mb-2 bg-gray-900 p-4 rounded-xl shadow-lg border border-gray-700"
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
-
         >
             <canvas
                 ref={previewCanvasRef}
@@ -130,48 +121,17 @@ const ShroomDisplay: React.FC<ShroomDisplayProps> = ({ index, ruleEncoded, shroo
                 suppressHydrationWarning
             />
 
-            {/* Hover Card */}
-            <div className={`
-                absolute left-0 top-full mb-2
-                bg-gray-800 p-4 rounded-lg shadow-xl border border-gray-600
-                min-w-[300px] z-50
-                transition-all duration-300 ease-out
-                ${isHovered ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2 pointer-events-none'}
-                `}>
-                <div className="flex items-center mb-2">
-                    <span className="text-sm font-mono cursor-pointer" style={{ color: shroomColor }}
-                        onClick={() => {
-                            navigator.clipboard.writeText(index + "");
-                            setLog('Copied Id');
-                            setTimeout(() => setLog(''), 1500);
-                        }}>#{mapNumberToMycelName(index)}</span>
-                    <span className="text-xs text-gray-400 ml-2">{log}</span>
-                    <button className='position-right bg-gray-700 p-2 rounded-lg cursor-pointer hover:bg-gray-600 transition-colors m-2'
-                        onClick={() => addSelectedShroom ? addSelectedShroom(index) : null}>add</button>
-                </div>
-                <div className="space-y-3">
-                    {Object.entries(ruleGroups).map(([transition, sums]) => (
-                        <div key={transition} className="flex items-baseline bg-gray-700 p-3 rounded-lg">
-                            <div className="flex items-baseline gap-2 mb-2 mr-2">
-                                <span className="font-bold text-sm">{transition}</span>
-                            </div>
-                            <div className="grid grid-cols-4 gap-2">
-                                {(sums as number[][]).map((sumArray, i) => (
-                                    <div
-                                        key={i}
-                                        className="text-xs font-mono p-1 bg-gray-600 rounded text-center"
-                                    >
-                                        [{sumArray.join(',')}]
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    ))}
-                </div>
-
-            </div>
-        </div >
+            {isHovered && (
+                <ShroomHoverCard
+                    id={index}
+                    shroomColor={shroomColor}
+                    log={log}
+                    setLog={setLog}
+                />
+            )}
+        </div>
     );
-};
+}
+
 
 export default ShroomDisplay;

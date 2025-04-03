@@ -80,3 +80,5 @@ export function arraysAreTheSame(a, b) {
 export function isWithinRadius(x, y, clickedX, clickedY, d) {
   return Math.sqrt((x - clickedX) ** 2 + (y - clickedY) ** 2) <= d;
 }
+
+

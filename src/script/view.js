@@ -49,6 +49,7 @@ export class Viewer {
                 }
                 // Zeichne den Element-Overlay (kleineres Rechteck in der Mitte)
                 this.ctx.fillStyle = allElements[data[y][x].element].color;
+                //this.ctx.fillStyle = shroomColors[data[y][x].shroom];
                 if (data[y][x].element > 0) {
                     this.ctx.fillRect(
                         this.offsetX + 1 + x * rectSize,
