@@ -25,11 +25,9 @@ interface ShroomHoverCardProps {
 
 export const ShroomHoverCard: React.FC<ShroomHoverCardProps> = ({
     id,
-    shroomColor,
     log,
     setLog,
     setIndex,
-    go,
     goAndReset,
 }) => {
     const [initialExpansion, setInitialExpansion] = useState<number[]>([]);

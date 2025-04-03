@@ -22,7 +22,7 @@ const midY = (gridSize - 1) / 2;
 const maxEvolve = 9;
 
 
-const ShroomDisplay: React.FC<ShroomDisplayProps> = ({ index, ruleEncoded, shroomColor, eConfig, addSelectedShroom }) => {
+const ShroomDisplay: React.FC<ShroomDisplayProps> = ({ index, ruleEncoded, shroomColor, eConfig }) => {
     const previewCanvasRef = useRef<HTMLCanvasElement>(null);
     const [isHovered, setIsHovered] = useState(false);
     const ruleSet = decodeRuleSetCompact(ruleEncoded);

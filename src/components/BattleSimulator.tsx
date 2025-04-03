@@ -56,14 +56,6 @@ const BattleSimulator: React.FC<BattleSimulatorProps> = ({ shroomIndex1, shroomI
     // Neue State-Variable für Startposition
     const [positionType, setPositionType] = useState<'diagonal' | 'stacked' | 'random'>('diagonal');
 
-    const [stats, setStats] = useState<{
-        shroom1: { expand: number; dissolve: number };
-        shroom2: { expand: number; dissolve: number };
-    }>({
-        shroom1: { expand: 0, dissolve: 0 },
-        shroom2: { expand: 0, dissolve: 0 },
-    });
-
     const [isHovering1, setIsHovering1] = useState(false);
     const [isHovering2, setIsHovering2] = useState(false);
 
@@ -74,16 +66,6 @@ const BattleSimulator: React.FC<BattleSimulatorProps> = ({ shroomIndex1, shroomI
     useEffect(() => {
         const ruleSet1 = generateRuleSetByIndex(index1);
         const ruleSet2 = generateRuleSetByIndex(index2);
-        setStats({
-            shroom1: {
-                expand: ruleSet1.expansionStrength,
-                dissolve: ruleSet1.dissolveStrength,
-            },
-            shroom2: {
-                expand: ruleSet2.expansionStrength,
-                dissolve: ruleSet2.dissolveStrength,
-            },
-        });
     }, [index1, index2]);
 
     // Hilfsfunktion: Bestimme Startpositionen
@@ -182,14 +164,6 @@ const BattleSimulator: React.FC<BattleSimulatorProps> = ({ shroomIndex1, shroomI
         gameRef.current.count();
     };
 
-    const assignNewShromms = () => {
-        setIndex1(tempIndex1)
-        setIndex2(tempIndex2)
-        setShroomColor1(generateSeededColor(tempIndex1))
-        setShroomColor2(generateSeededColor(tempIndex2))
-        setInputText1(mapNumberToMycelName(tempIndex1) || "")
-        setInputText2(mapNumberToMycelName(tempIndex2) || "")
-    }
     // Zufällige Index-Wahl via Würfel-Button
     const handleRandomizeIndexes = () => {
         const random1 = Math.floor(Math.random() * 65536);
