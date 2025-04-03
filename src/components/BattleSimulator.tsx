@@ -63,10 +63,6 @@ const BattleSimulator: React.FC<BattleSimulatorProps> = ({ shroomIndex1, shroomI
     const [tempIndex2, setTempIndex2] = useState(shroomIndex2);
     const [log, setLog] = useState<string>('');
 
-    useEffect(() => {
-        const ruleSet1 = generateRuleSetByIndex(index1);
-        const ruleSet2 = generateRuleSetByIndex(index2);
-    }, [index1, index2]);
 
     // Hilfsfunktion: Bestimme Startpositionen
     const getStartPositions = (): [Position, Position] => {
@@ -381,6 +377,7 @@ const BattleSimulator: React.FC<BattleSimulatorProps> = ({ shroomIndex1, shroomI
                                         }}
                                         goAndReset={(index: number) => {
                                             console.log("goAndReset", index, index2)
+                                            console.log("log", tempIndex1, tempIndex2)
                                             setIndex1(index)
                                             handleReset(index, index2)
                                             setIsHovering1(false)
