@@ -1,8 +1,11 @@
-import neo4j, { Driver, Session, Record } from 'neo4j-driver';
+import neo4j, { Driver, Record } from 'neo4j-driver';
 
 interface Neo4jRecord extends Record {
+    //eslint-disable-next-line @typescript-eslint/no-explicit-any
     get<K extends PropertyKey = PropertyKey>(key: K): any;
+    //eslint-disable-next-line @typescript-eslint/no-explicit-any
     get(n: number): any;
+    //eslint-disable-next-line @typescript-eslint/no-explicit-any
     toObject(): any;
 }
 
@@ -16,7 +19,8 @@ class Neo4jService {
         );
     }
 
-    private async runQuery<T>(query: string, params: any = {}): Promise<Neo4jRecord[]> {
+    //eslint-disable-next-line @typescript-eslint/no-explicit-any
+    private async runQuery(query: string, params: any = {}): Promise<Neo4jRecord[]> {
         const session = this.driver.session();
         try {
             const result = await session.run(query, params);

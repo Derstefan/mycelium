@@ -1,4 +1,4 @@
-import { adjustColor, catchColor } from "./utils";
+import { catchColor } from "./utils";
 
 
 
