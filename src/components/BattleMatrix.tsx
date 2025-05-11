@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { generateRuleSetByIndex, getIndexFromRuleSet } from '../script/rules';
+import { generateRuleSetByIndex } from '../script/rules';
 import { Game } from '../script/game';
 import { ElementConfig, Rule } from '../script/models';
 import { generateSeededColor } from '../script/utils';
@@ -110,11 +110,6 @@ const BattleMatrix: React.FC<BattleMatrixProps> = ({
         genome1: original.genome2,
         genome2: original.genome1
     });
-
-    // Hilfsfunktion: Konvertiert eine Zahl in einen 16-bit Binärstring
-    const toBinaryString = (num: number): string => {
-        return num.toString(2).padStart(16, '0');
-    };
 
     // Hilfsfunktion: Extrahiert die expansion und dissolve Werte aus einem RuleSet
     const extractGenomeFromRuleSet = (ruleSet: Rule[]): string => {
