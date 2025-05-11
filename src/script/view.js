@@ -1,3 +1,4 @@
+import { adjustColor, catchColor } from "./utils";
 
 
 
@@ -18,6 +19,8 @@ export class Viewer {
         this.offsetY = (this.canvasHeight - game.data.length * rectSize) / 2;
         this.hoverArea = null;
         // Canvas-Event-Listener hinzufügen
+        this.colorArray = this.game.shroomsConfig.shroomColors.map((color) => catchColor(color));
+        console.log(this.colorArray);
 
     }
 
@@ -33,7 +36,8 @@ export class Viewer {
         const data = this.game.data;
         const shroomColors = this.game.shroomsConfig.shroomColors;
         const sCount = this.game.sCount;
-        const allElements = this.game.elementConfig.allElements;
+        // const allElements = this.game.elementConfig.allElements;
+
         for (let y = 0; y < data.length; y++) {
             for (let x = 0; x < data[y].length; x++) {
                 // Zeichne zuerst die Shroom-Farben
@@ -48,8 +52,8 @@ export class Viewer {
                     );
                 }
                 // Zeichne den Element-Overlay (kleineres Rechteck in der Mitte)
-                this.ctx.fillStyle = allElements[data[y][x].element].color;
-                //this.ctx.fillStyle = shroomColors[data[y][x].shroom];
+                //this.ctx.fillStyle = allElements[data[y][x].element].color;
+                this.ctx.fillStyle = data[y][x].shroom ? this.colorArray[data[y][x].shroom][data[y][x].triggerSum] : "#000000";
                 if (data[y][x].element > 0) {
                     this.ctx.fillRect(
                         this.offsetX + 1 + x * rectSize,

@@ -12,6 +12,8 @@ interface BattleResult {
     ratio: number;
     winnerId: number | null;
     evolveCount: number;
+    genome1: string;  // Binärstring des ersten Shrooms
+    genome2: string;  // Binärstring des zweiten Shrooms
 }
 
 interface TooltipData {
@@ -54,7 +56,7 @@ const SimulationMatrix: React.FC = () => {
     }, []);
     // Berechne die Canvas-Punkte inklusive gespiegelter Kopien
     const points = simulationResults.flatMap((data) => {
-        const { id1, id2, ratio, winnerId, evolveCount } = data;
+        const { id1, id2, ratio, winnerId, evolveCount, genome1, genome2 } = data;
 
         // Originaler Punkt (id1 vs id2)
         const originalColor = winnerId === id1
@@ -89,7 +91,9 @@ const SimulationMatrix: React.FC = () => {
                     id2: id1,
                     ratio: mirroredRatio,
                     winnerId: mirroredWinnerId,
-                    evolveCount
+                    evolveCount,
+                    genome1,
+                    genome2
                 },
                 color: originalColor
             }] : [])
@@ -130,12 +134,12 @@ const SimulationMatrix: React.FC = () => {
         const y = e.clientY - rect.top;
         const found = getPointAt(x, y);
         if (found) {
-            const { id1, id2, ratio, evolveCount } = found.data;
+            const { id1, id2, ratio, evolveCount, genome1, genome2 } = found.data;
             setTooltip({
                 visible: true,
                 x: e.clientX + 10,
                 y: e.clientY + 10,
-                content: `id1: ${id1}, id2: ${id2}, ratio: ${(ratio * 100).toFixed(1)}%, evolve: ${evolveCount}`
+                content: `Shroom 1: ${id1}, Genom 1: ${genome1}, Shroom 2: ${id2}, Genom 2: ${genome2}, Ratio: ${(ratio * 100).toFixed(1)}%, evolve: ${evolveCount}, Winner: ${found.data.winnerId || 'Draw'}`
             });
         } else {
             setTooltip((prev) => ({ ...prev, visible: false }));

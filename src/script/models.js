@@ -11,10 +11,11 @@ export class Element {
 }
 
 export class Field {
-  constructor(element, shroom) {
+  constructor(element, shroom, triggerSum = 0) {
     this.element = element;//int
     this.shroom = shroom; // int
     this.age = 0;//int
+    this.triggerSum = triggerSum;
   }
 }
 

@@ -6,7 +6,7 @@ import { ElementConfig } from "@/src/script/models";
 import { useState } from 'react';
 
 const ITEMS_PER_PAGE = 100 as const;
-const TOTAL_ITEMS = 12188;
+const TOTAL_ITEMS = 65536;
 
 export default function RandomShroomsPage() {
     const [startIndex, setStartIndex] = useState(400);

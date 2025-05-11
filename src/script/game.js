@@ -88,58 +88,6 @@ export class Game {
 
 
 
-  botTurn() {
-    // Bot-Logik: Bestimme eine Zielzelle, die genau 2 Zellen (Manhattan-Distanz) entfernt ist
-    if (this.isBot[this.currentShroom]) {
-      if (!this.botCurrentPosition) {
-        let candidatePositions = [];
-        const offsets = [
-          { dx: 2, dy: 0 },
-          { dx: -2, dy: 0 },
-          { dx: 0, dy: 2 },
-          { dx: 0, dy: -2 },
-          { dx: 1, dy: 1 },
-          { dx: 1, dy: -1 },
-          { dx: -1, dy: 1 },
-          { dx: -1, dy: -1 }
-        ];
-
-        // Suche nach Zellen, die dem aktuellen Bot gehören und bestimme Kandidatenpositionen
-        for (let x = 1; x < this.WIDTH - 1; x++) {
-          for (let y = 1; y < this.HEIGHT - 1; y++) {
-            if (this.data[x][y].shroom === this.currentShroom) {
-              offsets.forEach(off => {
-                const newX = x + off.dx;
-                const newY = y + off.dy;
-                if (newX >= 1 && newX < this.WIDTH - 1 && newY >= 1 && newY < this.HEIGHT - 1) {
-                  candidatePositions.push({ x: newX, y: newY });
-                }
-              });
-            }
-          }
-        }
-
-        // Duplikate entfernen
-        candidatePositions = candidatePositions.filter((pos, index, self) =>
-          index === self.findIndex(p => p.x === pos.x && p.y === pos.y)
-        );
-
-        // Wähle zufällig eine der Kandidatenpositionen, falls vorhanden
-        if (candidatePositions.length > 0) {
-          this.botCurrentPosition = candidatePositions[Math.floor(Math.random() * candidatePositions.length)];
-        } else {
-          // Fallback: zufällige Position im gültigen Bereich
-          this.botCurrentPosition = {
-            x: Math.floor(Math.random() * (this.WIDTH - 2)) + 1,
-            y: Math.floor(Math.random() * (this.HEIGHT - 2)) + 1
-          };
-        }
-      }
-      setTimeout(this.botDraw, 200);
-    }
-  }
-
-
 
 
   stepClick(clickedX, clickedY) {
@@ -253,7 +201,7 @@ export class Game {
     const rule = this.getRuleByShroom(this.data[x][y].element, sums, shroomId);
 
     if (rule) {
-      const field = new Field(rule.elementId, shroomId);
+      const field = new Field(rule.elementId, shroomId, sums[0]); //only for first element hard coded
       field.age = isOwnShroom ? age + 1 : 0;
       return field;
     }
