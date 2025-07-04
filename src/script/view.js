@@ -37,11 +37,10 @@ export class Viewer {
         const shroomColors = this.game.shroomsConfig.shroomColors;
         const sCount = this.game.sCount;
         // const allElements = this.game.elementConfig.allElements;
-
         for (let y = 0; y < data.length; y++) {
             for (let x = 0; x < data[y].length; x++) {
                 // Zeichne zuerst die Shroom-Farben
-                if (data[y][x].shroom !== null) {
+                if (data[y][x].shroom !== null && data[y][x].shroom !== undefined) {
                     this.ctx.fillStyle = shroomColors[data[y][x].shroom];
                     sCount[data[y][x].shroom]++;
                     this.ctx.fillRect(
@@ -50,10 +49,12 @@ export class Viewer {
                         rectSize,
                         rectSize
                     );
+                    this.ctx.fillStyle = this.colorArray[data[y][x].shroom][data[y][x].triggerSum];
                 }
                 // Zeichne den Element-Overlay (kleineres Rechteck in der Mitte)
-                //this.ctx.fillStyle = allElements[data[y][x].element].color;
-                this.ctx.fillStyle = data[y][x].shroom ? this.colorArray[data[y][x].shroom][data[y][x].triggerSum] : "#000000";
+                //this.ctx.fillStyle = shroomColors[data[y][x].shroom];
+
+
                 if (data[y][x].element > 0) {
                     this.ctx.fillRect(
                         this.offsetX + 1 + x * rectSize,
@@ -69,6 +70,7 @@ export class Viewer {
                         rectSize
                     );
                 }
+                this.ctx.fillStyle = "#000000";
             }
         }
 

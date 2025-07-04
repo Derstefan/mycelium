@@ -229,6 +229,7 @@ const BattleSimulator: React.FC<BattleSimulatorProps> = ({ shroomIndex1, shroomI
                 gridSize
             );
 
+
             newGame.shroomStartValues(getStartPositions());
             //newGame.putWall(10, 10, 80, 10);
             const newViewer = new Viewer(newGame, canvas);
