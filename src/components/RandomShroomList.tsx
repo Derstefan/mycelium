@@ -22,7 +22,7 @@ const RandomShroomsList: React.FC<RandomShroomsListProps> = ({ count = 5, eConfi
             const shroomColor = sConfig.shroomColors[index];
             return { ruleEncoded, shroomColor };
         });
-    }, [count]);
+    }, [count, eConfig.allElements]);
 
     return (
         <div className="flex flex-wrap gap-4">

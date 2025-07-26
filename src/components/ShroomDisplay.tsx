@@ -102,7 +102,7 @@ const ShroomDisplay: React.FC<ShroomDisplayProps> = ({ index, ruleEncoded, shroo
                 clearInterval(intervalRef.current);
             }
         };
-    }, [isHovered]);
+    }, [isHovered, ruleSet]);
 
 
 

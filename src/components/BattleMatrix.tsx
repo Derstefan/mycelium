@@ -219,7 +219,7 @@ const BattleMatrix: React.FC<BattleMatrixProps> = ({
         };
 
         simulateAll();
-    }, [shroomIndexes, eConfig, evolveEnd]);
+    }, [shroomIndexes, eConfig, evolveEnd, simulateBattle]);
 
     // Initialisiere Neo4j beim Start der Komponente
     useEffect(() => {

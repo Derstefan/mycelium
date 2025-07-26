@@ -248,7 +248,7 @@ const BattleSimulator: React.FC<BattleSimulatorProps> = ({ shroomIndex1, shroomI
                 clearInterval(simulationInterval.current);
             }
         };
-    }, [index1, index2, eConfig, shroomColor1, shroomColor2, positionType]);
+    }, [index1, index2, eConfig, shroomColor1, shroomColor2, positionType, getStartPositions, startSimulation]);
 
     const drawChart = () => {
         const canvas = chartRef.current;
