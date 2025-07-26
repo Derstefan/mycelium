@@ -62,6 +62,8 @@ const AdvancedBattleSimulator: React.FC<AdvancedBattleSimulatorProps> = ({
 
     // Keyboard event handler for space key
     useEffect(() => {
+        if (typeof window === 'undefined') return; // Skip during SSR
+
         const handleKeyDown = (event: KeyboardEvent) => {
             if (event.code === 'Space') {
                 event.preventDefault(); // Prevent page scroll
@@ -92,6 +94,8 @@ const AdvancedBattleSimulator: React.FC<AdvancedBattleSimulatorProps> = ({
 
     // Event-Listener für Browser-Navigation
     useEffect(() => {
+        if (typeof window === 'undefined') return; // Skip during SSR
+
         const handlePopState = () => {
             // Parse URL parameters when browser navigation occurs
             const urlParams = new URLSearchParams(window.location.search);
@@ -202,6 +206,8 @@ const AdvancedBattleSimulator: React.FC<AdvancedBattleSimulatorProps> = ({
 
     const updateURL = (newConfigs: ShroomConfig[], addToHistory: boolean = false, immediate: boolean = false) => {
         const updateURLInternal = () => {
+            if (typeof window === 'undefined') return; // Skip during SSR
+
             const shroomsParam = newConfigs.map(s => `${decimalToBinary16(s.index)},${s.x},${s.y}`).join(';');
             const newURL = `/simulator/advanced?width=${width}&height=${height}&shrooms=${shroomsParam}`;
 

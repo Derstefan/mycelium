@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { ElementConfig } from "@/src/script/models";
 import AdvancedBattleSimulator from "@/src/components/AdvancedBattleSimulator";
 import { binary16ToDecimal, isValidBinary16, decimalToBinary16 } from "@/src/utils/binaryUtils";
 
-export default function AdvancedSimulatorPage() {
+function AdvancedSimulatorContent() {
     const searchParams = useSearchParams();
     const [config, setConfig] = useState<{
         width: number;
@@ -18,6 +18,8 @@ export default function AdvancedSimulatorPage() {
 
     useEffect(() => {
         // URL-Parameter auslesen (auch bei Browser-Navigation)
+        if (typeof window === 'undefined') return; // Skip during SSR
+
         const urlParams = new URLSearchParams(window.location.search);
         const width = parseInt(urlParams.get('width') || searchParams.get('width') || '121');
         const height = parseInt(urlParams.get('height') || searchParams.get('height') || '121');
@@ -65,7 +67,7 @@ export default function AdvancedSimulatorPage() {
             ];
 
             // Wenn keine Shrooms in der URL waren, erstelle eine neue URL mit den random Shrooms
-            if (!shroomsParam) {
+            if (!shroomsParam && typeof window !== 'undefined') {
                 const shroomsParamNew = shrooms.map(s => `${decimalToBinary16(s.index)},${s.x},${s.y}`).join(';');
                 const newURL = `/simulator/advanced?width=${width}&height=${height}&shrooms=${shroomsParamNew}`;
                 // Verwende replace statt push, damit der erste Eintrag in der History die random Shrooms sind
@@ -85,6 +87,8 @@ export default function AdvancedSimulatorPage() {
 
     // Event-Listener für Browser-Navigation (popstate)
     useEffect(() => {
+        if (typeof window === 'undefined') return; // Skip during SSR
+
         const handlePopState = () => {
             // Force re-render when browser navigation occurs
             setForceUpdate(prev => prev + 1);
@@ -111,5 +115,17 @@ export default function AdvancedSimulatorPage() {
                 eConfig={config.eConfig}
             />
         </div>
+    );
+}
+
+export default function AdvancedSimulatorPage() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen flex items-center justify-center">
+                <div className="text-white">Lade erweiterten Simulator...</div>
+            </div>
+        }>
+            <AdvancedSimulatorContent />
+        </Suspense>
     );
 } 
