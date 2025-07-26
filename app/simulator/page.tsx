@@ -48,13 +48,13 @@ export default function RandomShroomsPage() {
             <h1 className="text-2xl font-bold mb-4">Simulator</h1>
             <div className="mb-4 flex gap-4">
                 <a
-                    href="/simulator/advanced"
+                    href="/"
                     className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
                 >
                     Erweiterter Simulator
                 </a>
                 <a
-                    href="/simulator/advanced/help"
+                    href="/"
                     className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors"
                 >
                     Hilfe

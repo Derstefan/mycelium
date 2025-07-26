@@ -138,7 +138,7 @@ const AdvancedBattleSimulator: React.FC<AdvancedBattleSimulatorProps> = ({
 
     // Initialize history with current URL
     useEffect(() => {
-        const currentURL = `/simulator/advanced?width=${width}&height=${height}&shrooms=${shroomConfigs.map(s => `${decimalToBinary16(s.index)},${s.x},${s.y}`).join(';')}`;
+        const currentURL = `/?width=${width}&height=${height}&shrooms=${shroomConfigs.map(s => `${decimalToBinary16(s.index)},${s.x},${s.y}`).join(';')}`;
         if (historySteps.length === 0) {
             setHistorySteps([currentURL]);
             setCurrentStepIndex(0);
@@ -158,11 +158,11 @@ const AdvancedBattleSimulator: React.FC<AdvancedBattleSimulatorProps> = ({
         chartData.current = [...chartData.current, [...currentCounts]].slice(-maxDataPoints);
         drawChart();
 
-        // Prüfe ob Simulation beendet ist (nur noch ein Shroom übrig)
-        const activeShrooms = currentCounts.filter(count => count > 0);
-        if (activeShrooms.length <= 1) {
-            stopSimulation();
-        }
+        // Entferne das automatische Stoppen, wenn nur noch ein Shroom übrig ist
+        // const activeShrooms = currentCounts.filter(count => count > 0);
+        // if (activeShrooms.length <= 1) {
+        //     stopSimulation();
+        // }
     };
 
     const startSimulation = () => {
@@ -209,7 +209,7 @@ const AdvancedBattleSimulator: React.FC<AdvancedBattleSimulatorProps> = ({
             if (typeof window === 'undefined') return; // Skip during SSR
 
             const shroomsParam = newConfigs.map(s => `${decimalToBinary16(s.index)},${s.x},${s.y}`).join(';');
-            const newURL = `/simulator/advanced?width=${width}&height=${height}&shrooms=${shroomsParam}`;
+            const newURL = `/?width=${width}&height=${height}&shrooms=${shroomsParam}`;
 
             if (addToHistory) {
                 // Füge zur Browser-History hinzu (für Zurück-Navigation)
@@ -333,39 +333,6 @@ const AdvancedBattleSimulator: React.FC<AdvancedBattleSimulatorProps> = ({
         //if release mouse button, update url
     };
 
-    const handleCanvasMouseDown = (event: React.MouseEvent<HTMLCanvasElement>) => {
-        const coords = getCanvasCoordinates(event);
-        if (!coords) return;
-
-        console.log("mouse down", coords);
-
-        // Check if clicking on a shroom position (any pixel within 2 pixels of shroom)
-        const clickedShroomIndex = shroomConfigs.findIndex(
-            shroom => Math.abs(shroom.x - coords.x) <= 2 && Math.abs(shroom.y - coords.y) <= 2
-        );
-
-        // If no shroom clicked directly, check if we're hovering over a shroom
-        let selectedShroomIndex = clickedShroomIndex;
-        if (selectedShroomIndex === -1 && hoveredPixel && hoveredPixel.shroom !== null) {
-            selectedShroomIndex = hoveredPixel.shroom;
-            console.log("Selected shroom from hover:", selectedShroomIndex);
-        }
-
-        if (selectedShroomIndex !== -1) {
-            console.log("Selected shroom index:", selectedShroomIndex);
-            setDraggedShroom(selectedShroomIndex);
-
-            // Pause simulation when starting to drag
-            if (isSimulating) {
-                console.log("Pausing simulation for drag");
-                setWasSimulatingBeforeDrag(true);
-                stopSimulation();
-            } else {
-                setWasSimulatingBeforeDrag(false);
-            }
-        }
-    };
-
     const handleCanvasMouseUp = (event: React.MouseEvent<HTMLCanvasElement>) => {
         const coords = getCanvasCoordinates(event);
 
@@ -444,6 +411,42 @@ const AdvancedBattleSimulator: React.FC<AdvancedBattleSimulatorProps> = ({
             setShroomConfigs(newConfigs);
             updateURL(newConfigs, true, true); // History + sofortige Ausführung
         }
+    };
+
+    // Handler für diagonale Anordnung
+    const arrangeDiagonal = () => {
+        const n = shroomConfigs.length;
+        const minX = 1, maxX = width - 2;
+        const minY = 1, maxY = height - 2;
+        const newConfigs = shroomConfigs.map((config, i) => ({
+            ...config,
+            x: Math.max(minX, Math.min(maxX, Math.round((maxX - minX) * (i / (n - 1)) + minX))),
+            y: Math.max(minY, Math.min(maxY, Math.round((maxY - minY) * (i / (n - 1)) + minY)))
+        }));
+        setShroomConfigs(newConfigs);
+        updateURL(newConfigs, true, true);
+    };
+
+    // Handler für kreisförmige Anordnung
+    const arrangeCircle = () => {
+        const n = shroomConfigs.length;
+        const minX = 1, maxX = width - 2;
+        const minY = 1, maxY = height - 2;
+        const centerX = Math.floor((minX + maxX) / 2);
+        const centerY = Math.floor((minY + maxY) / 2);
+        const radius = Math.floor(Math.min(maxX - minX, maxY - minY) * 0.45);
+        const newConfigs = shroomConfigs.map((config, i) => {
+            const angle = (2 * Math.PI * i) / n;
+            const x = Math.round(centerX + radius * Math.cos(angle));
+            const y = Math.round(centerY + radius * Math.sin(angle));
+            return {
+                ...config,
+                x: Math.max(minX, Math.min(maxX, x)),
+                y: Math.max(minY, Math.min(maxY, y))
+            };
+        });
+        setShroomConfigs(newConfigs);
+        updateURL(newConfigs, true, true);
     };
 
     // Beim Initialisieren oder bei Änderungen neu aufsetzen
@@ -656,13 +659,12 @@ const AdvancedBattleSimulator: React.FC<AdvancedBattleSimulatorProps> = ({
 
                         {hoveredShroom === index && (
                             <div
-                                className="absolute top-full left-0 z-10"
+                                className="absolute top-full left-0 z-10 bg-gray-800 p-4 rounded shadow-lg flex flex-col gap-2"
                                 onMouseEnter={() => {
                                     if (hoverTimeout.current) {
                                         clearTimeout(hoverTimeout.current);
                                     }
                                     setHoveredShroom(index);
-                                    // Pause simulation when popup opens
                                     if (isSimulating) {
                                         setWasSimulatingBeforeHover(true);
                                         stopSimulation();
@@ -673,14 +675,45 @@ const AdvancedBattleSimulator: React.FC<AdvancedBattleSimulatorProps> = ({
                                 onMouseLeave={() => {
                                     hoverTimeout.current = setTimeout(() => {
                                         setHoveredShroom(null);
-                                        // Resume simulation if it was running before
                                         if (wasSimulatingBeforeHover) {
                                             startSimulation();
                                             setWasSimulatingBeforeHover(false);
                                         }
-                                    }, 300); // 300ms Verzögerung
+                                    }, 300);
                                 }}
                             >
+                                <div className="flex gap-2 items-center">
+                                    <label className="text-white text-xs">X:</label>
+                                    <input
+                                        type="number"
+                                        min={0}
+                                        max={width - 1}
+                                        value={config.x}
+                                        onChange={e => {
+                                            const newX = Math.max(0, Math.min(width - 1, parseInt(e.target.value) || 0));
+                                            const newConfigs = [...shroomConfigs];
+                                            newConfigs[index] = { ...newConfigs[index], x: newX };
+                                            setShroomConfigs(newConfigs);
+                                            updateURL(newConfigs, false, true);
+                                        }}
+                                        className="bg-gray-700 text-white p-1 rounded text-xs w-12"
+                                    />
+                                    <label className="text-white text-xs">Y:</label>
+                                    <input
+                                        type="number"
+                                        min={0}
+                                        max={height - 1}
+                                        value={config.y}
+                                        onChange={e => {
+                                            const newY = Math.max(0, Math.min(height - 1, parseInt(e.target.value) || 0));
+                                            const newConfigs = [...shroomConfigs];
+                                            newConfigs[index] = { ...newConfigs[index], y: newY };
+                                            setShroomConfigs(newConfigs);
+                                            updateURL(newConfigs, false, true);
+                                        }}
+                                        className="bg-gray-700 text-white p-1 rounded text-xs w-12"
+                                    />
+                                </div>
                                 <ShroomHoverCard
                                     id={config.index}
                                     shroomColor={shroomColors[index]}
@@ -714,19 +747,27 @@ const AdvancedBattleSimulator: React.FC<AdvancedBattleSimulatorProps> = ({
 
             {/* Steuerung */}
             <div className="flex flex-col items-center mb-4 gap-2 w-full">
-                <button
-                    className="px-4 py-2 text-white bg-green-800 rounded-lg hover:bg-green-600 transition-colors w-full sm:w-auto"
-                    onClick={addShroom}
-                >
-                    + Shroom
-                </button>
+
 
                 <div className="flex flex-wrap items-center justify-center gap-2 w-full">
-                    {hoveredShroom !== null && wasSimulatingBeforeHover && (
-                        <div className="text-yellow-400 text-sm mr-2">
-                            ⏸ Pausiert für DNA-Editierung
-                        </div>
-                    )}
+                    <button
+                        className="px-4 py-2 text-white bg-green-800 rounded-lg hover:bg-green-600 transition-colors w-full sm:w-auto"
+                        onClick={addShroom}
+                    >
+                        +
+                    </button>
+                    <button
+                        className="px-3 py-2 text-white bg-blue-800 rounded-lg hover:bg-blue-600 transition-colors text-sm"
+                        onClick={arrangeDiagonal}
+                    >
+                        Diagonal
+                    </button>
+                    <button
+                        className="px-3 py-2 text-white bg-purple-800 rounded-lg hover:bg-purple-600 transition-colors text-sm"
+                        onClick={arrangeCircle}
+                    >
+                        Kreis
+                    </button>
                     <button
                         className="px-3 py-2 text-white bg-gray-800 rounded-lg hover:bg-gray-600 transition-colors text-sm"
                         onClick={handleReset}
@@ -764,7 +805,6 @@ const AdvancedBattleSimulator: React.FC<AdvancedBattleSimulatorProps> = ({
                     height={height}
                     className="border-2 border-gray-700 rounded-lg cursor-crosshair max-w-full h-auto"
                     onMouseMove={handleCanvasMouseMove}
-                    onMouseDown={handleCanvasMouseDown}
                     onMouseUp={handleCanvasMouseUp}
                     onMouseLeave={handleCanvasMouseLeave}
                     onTouchStart={(e) => {
@@ -774,7 +814,7 @@ const AdvancedBattleSimulator: React.FC<AdvancedBattleSimulatorProps> = ({
                         const x = touch.clientX - rect.left;
                         const y = touch.clientY - rect.top;
                         const event = { clientX: x, clientY: y } as React.MouseEvent<HTMLCanvasElement>;
-                        handleCanvasMouseDown(event);
+                        handleCanvasMouseUp(event);
                     }}
                     onTouchMove={(e) => {
                         e.preventDefault();
@@ -807,56 +847,10 @@ const AdvancedBattleSimulator: React.FC<AdvancedBattleSimulatorProps> = ({
                     </div>
                 )}
 
-                {/* Shroom Position Indicators - Only show when hovering canvas */}
-                {mousePosition && shroomConfigs.map((config, index) => {
-                    // Berechne Canvas-Position basierend auf rectSize und Offset
-                    // Konvertiere von Game-Koordinaten zu Viewer-Koordinaten
-                    const canvasWidth = canvasRef.current?.width || width * rectSize;
-                    const canvasHeight = canvasRef.current?.height || height * rectSize;
-                    const offsetX = (canvasWidth - width * rectSize) / 2;
-                    const offsetY = (canvasHeight - height * rectSize) / 2;
+                {/* Shroom Position Indicators - Entfernt */}
 
-                    // Verwende normale Shroom-Position
-                    const currentX = config.x;
-                    const currentY = config.y;
+                {/* Count-Bereich entfernt */}
 
-                    // Game-Koordinaten zu Viewer-Koordinaten konvertieren
-                    const viewerX = currentY; // Game X → Viewer X
-                    const viewerY = currentX; // Game Y → Viewer Y
-
-                    const canvasX = offsetX + viewerX * rectSize + rectSize / 2;
-                    const canvasY = offsetY + viewerY * rectSize + rectSize / 2;
-
-                    return (
-                        <div
-                            key={index}
-                            className="absolute w-6 h-6 border-2 rounded-full"
-                            style={{
-                                left: `${(canvasX / canvasWidth) * 100}%`,
-                                top: `${(canvasY / canvasHeight) * 100}%`,
-                                transform: 'translate(-50%, -50%)',
-                                backgroundColor: draggedShroom === index ? 'rgba(255, 255, 255, 0.5)' : 'rgba(255, 255, 255, 0.1)',
-                                borderColor: shroomColors[index],
-                                borderWidth: draggedShroom === index ? '3px' : '2px',
-                                zIndex: draggedShroom === index ? 10 : 5,
-                                cursor: 'grab'
-                            }}
-                            onMouseDown={(e) => {
-                                e.stopPropagation();
-                                console.log('Mouse Down - Start Position:', { x: config.x, y: config.y });
-                                setDraggedShroom(index);
-                            }}
-                        />
-                    );
-                })}
-
-                <div className="absolute bottom-2 left-2 right-2 flex justify-between text-sm">
-                    {counts.map((count, index) => (
-                        <span key={index} style={{ color: shroomColors[index] }}>
-                            {count}
-                        </span>
-                    ))}
-                </div>
             </div>
 
             {/* Chart */}
