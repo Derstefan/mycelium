@@ -1,7 +1,6 @@
 "use client";
 
 import BattleSimulator from "@/src/components/BattleSimulator";
-import CanvasGame from "@/src/components/CanvasGame";
 import { ElementConfig } from "@/src/script/models";
 import { generateRuleSetByIndex, generateRuleSetByIndexExpanding, getIndexFromRuleSet } from "@/src/script/rules";
 import { useEffect, useState } from "react";

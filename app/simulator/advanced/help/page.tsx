@@ -44,12 +44,12 @@ export default function AdvancedSimulatorHelpPage() {
                         </div>
                         <div>
                             <h3 className="font-semibold text-green-400">shrooms</h3>
-                            <p>Format: "binaryIndex1,x1,y1;binaryIndex2,x2,y2;..."</p>
+                            <p>Format: &quot;binaryIndex1,x1,y1;binaryIndex2,x2,y2;...&quot;</p>
                             <p className="text-sm text-gray-400">
-                                - binaryIndex: 16-Bit Binärzahl (z.B. "0000001111101000")<br />
+                                - binaryIndex: 16-Bit Binärzahl (z.B. &quot;0000001111101000&quot;)<br />
                                 - x, y: Position im Grid (0 bis width-1 / height-1)<br />
                                 - Mehrere Shrooms werden durch Semikolon getrennt<br />
-                                - Binärzahlen können auch mit Leerzeichen formatiert werden: "0000 0011 1110 1000"
+                                - Binärzahlen können auch mit Leerzeichen formatiert werden: &quot;0000 0011 1110 1000&quot;
                             </p>
                         </div>
                     </div>
@@ -94,9 +94,9 @@ export default function AdvancedSimulatorHelpPage() {
                     <div className="space-y-4 text-gray-300">
                         <p>Jeder Shroom hat eine 16-Bit Binär-ID, die sein Verhalten bestimmt:</p>
                         <ul className="space-y-2">
-                            <li>• <strong>Format:</strong> 16 Ziffern aus 0 und 1 (z.B. "0000001111101000")</li>
+                            <li>• <strong>Format:</strong> 16 Ziffern aus 0 und 1 (z.B. &quot;0000001111101000&quot;)</li>
                             <li>• <strong>Bereich:</strong> 0000000000000000 bis 1111111111111111 (0-65535)</li>
-                            <li>• <strong>Lesbarkeit:</strong> Kann mit Leerzeichen formatiert werden: "0000 0011 1110 1000"</li>
+                            <li>• <strong>Lesbarkeit:</strong> Kann mit Leerzeichen formatiert werden: &quot;0000 0011 1110 1000&quot;</li>
                             <li>• <strong>Beispiele:</strong></li>
                         </ul>
                         <div className="bg-gray-900 p-4 rounded font-mono text-sm">

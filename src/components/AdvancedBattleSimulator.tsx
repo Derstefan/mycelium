@@ -32,7 +32,6 @@ const AdvancedBattleSimulator: React.FC<AdvancedBattleSimulatorProps> = ({
     shrooms,
     eConfig
 }) => {
-    const router = useRouter();
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const chartRef = useRef<HTMLCanvasElement>(null);
     const gameRef = useRef<Game | null>(null);
@@ -47,7 +46,7 @@ const AdvancedBattleSimulator: React.FC<AdvancedBattleSimulatorProps> = ({
     const [log, setLog] = useState<string>('');
     const [tempIndices, setTempIndices] = useState<number[]>([]);
     const [hoveredShroom, setHoveredShroom] = useState<number | null>(null);
-    const [copied, setCopied] = useState(false);
+
     const [wasSimulatingBeforeHover, setWasSimulatingBeforeHover] = useState(false);
     const [wasSimulatingBeforeDrag, setWasSimulatingBeforeDrag] = useState(false);
     const [historySteps, setHistorySteps] = useState<string[]>([]);
@@ -257,8 +256,7 @@ const AdvancedBattleSimulator: React.FC<AdvancedBattleSimulatorProps> = ({
 
         try {
             await navigator.clipboard.writeText(url);
-            setCopied(true);
-            setTimeout(() => setCopied(false), 2000);
+            console.log('URL kopiert:', url);
         } catch (err) {
             console.error('Fehler beim Kopieren der URL:', err);
         }
