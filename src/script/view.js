@@ -3,7 +3,7 @@ import { catchColor } from "./utils";
 
 
 
-const rectSize = 5; // Größe jeder Zelle
+export const rectSize = 5; // Größe jeder Zelle
 
 export class Viewer {
     constructor(game, canvas) {

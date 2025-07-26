@@ -46,6 +46,20 @@ export default function RandomShroomsPage() {
     return (
         <div className="min-h-screen flex flex-col items-center justify-center p-4">
             <h1 className="text-2xl font-bold mb-4">Simulator</h1>
+            <div className="mb-4 flex gap-4">
+                <a
+                    href="/simulator/advanced"
+                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                >
+                    Erweiterter Simulator
+                </a>
+                <a
+                    href="/simulator/advanced/help"
+                    className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors"
+                >
+                    Hilfe
+                </a>
+            </div>
             <BattleSimulator
                 shroomIndex1={indices[0]}
                 shroomIndex2={indices[1]}

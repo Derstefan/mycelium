@@ -28,6 +28,7 @@ export const ShroomHoverCard: React.FC<ShroomHoverCardProps> = ({
     log,
     setLog,
     setIndex,
+    go,
     goAndReset,
 }) => {
     const [initialExpansion, setInitialExpansion] = useState<number[]>([]);
@@ -66,6 +67,16 @@ export const ShroomHoverCard: React.FC<ShroomHoverCardProps> = ({
     const hasChanges =
         !arraysEqual(expansionValues, initialExpansion) ||
         !arraysEqual(dissolveValues, initialDissolve);
+
+    // Debug-Ausgabe
+    console.log('ShroomHoverCard Debug:', {
+        id,
+        initialExpansion,
+        initialDissolve,
+        expansionValues,
+        dissolveValues,
+        hasChanges
+    });
 
     const InteractiveStrengthBoxes: React.FC<{
         values: number[];
@@ -118,7 +129,12 @@ export const ShroomHoverCard: React.FC<ShroomHoverCardProps> = ({
                 </div>
 
                 <div className="mb-4">
-                    <div className="text-xs text-gray-400 mb-1">Expansion (0→1)</div>
+                    <div className="text-xs text-gray-400 mb-1">
+                        Expansion (0→1)
+                        {!arraysEqual(expansionValues, initialExpansion) &&
+                            <span className="text-yellow-400 ml-2">● Modified</span>
+                        }
+                    </div>
                     <InteractiveStrengthBoxes
                         values={expansionValues}
                         color="#00ff00"
@@ -129,10 +145,18 @@ export const ShroomHoverCard: React.FC<ShroomHoverCardProps> = ({
                             setExpansionValues(newValues);
                         }}
                     />
+                    <div className="text-xs text-gray-500 mt-1">
+                        Aktuell: [{expansionValues.sort().join(', ')}]
+                    </div>
                 </div>
 
                 <div className="mb-4">
-                    <div className="text-xs text-gray-400 mb-1">Dissolve (1→0)</div>
+                    <div className="text-xs text-gray-400 mb-1">
+                        Dissolve (1→0)
+                        {!arraysEqual(dissolveValues, initialDissolve) &&
+                            <span className="text-yellow-400 ml-2">● Modified</span>
+                        }
+                    </div>
                     <InteractiveStrengthBoxes
                         values={dissolveValues}
                         color="#ff0000"
@@ -143,30 +167,32 @@ export const ShroomHoverCard: React.FC<ShroomHoverCardProps> = ({
                             setDissolveValues(newValues);
                         }}
                     />
+                    <div className="text-xs text-gray-500 mt-1">
+                        Aktuell: [{dissolveValues.sort().join(', ')}]
+                    </div>
                 </div>
 
-                {hasChanges && (
-                    <div className="flex gap-2 mt-4">
-                        {/*<button
-                            onClick={() => {
-                                const newIndex = updateIndex(expansionValues, dissolveValues);
-                                go?.(newIndex);
-                            }}
-                            className="px-3 py-1 bg-green-600 hover:bg-green-700 rounded text-sm text-white"
-                        >
-                            Go
-                        </button>*/}
-                        <button
-                            onClick={() => {
-                                const newIndex = updateIndex(expansionValues, dissolveValues);
-                                goAndReset?.(newIndex);
-                            }}
-                            className="px-3 py-1 bg-blue-600 hover:bg-blue-700 rounded text-sm text-white"
-                        >
-                            Go & Reset
-                        </button>
-                    </div>
-                )}
+
+
+                <div className="mt-4">
+                    {hasChanges ? (
+                        <div className="flex gap-2">
+                            <button
+                                onClick={() => {
+                                    const newIndex = updateIndex(expansionValues, dissolveValues);
+                                    go?.(newIndex);
+                                }}
+                                className="px-4 py-2 bg-green-600 hover:bg-green-700 rounded text-sm text-white font-semibold"
+                            >
+                                Go
+                            </button>
+                        </div>
+                    ) : (
+                        <div className="text-xs text-gray-500">
+                            Klicke auf die Zahlen 1-8 um die DNA zu bearbeiten
+                        </div>
+                    )}
+                </div>
             </div>
         </div>
     );

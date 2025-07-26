@@ -1,0 +1,935 @@
+"use client";
+
+import { useEffect, useRef, useState } from 'react';
+import { generateRuleSetByIndex } from '../script/rules';
+import { Viewer } from '../script/view';
+import { Game } from '../script/game';
+import { ElementConfig } from '../script/models';
+import { generateSeededColor } from '../script/utils';
+import { mapNumberToMycelName, parseMycelName } from '../script/namegenerator';
+import { ShroomHoverCard } from './mycel/ShroomHoverCard';
+import { decimalToBinary16, binary16ToDecimal, isValidBinary16, formatBinary16 } from '../utils/binaryUtils';
+import { useRouter } from 'next/navigation';
+
+interface ShroomConfig {
+    index: number;
+    x: number;
+    y: number;
+}
+
+interface AdvancedBattleSimulatorProps {
+    width: number;
+    height: number;
+    shrooms: ShroomConfig[];
+    eConfig: ElementConfig;
+}
+
+type Position = { x: number; y: number };
+
+const AdvancedBattleSimulator: React.FC<AdvancedBattleSimulatorProps> = ({
+    width,
+    height,
+    shrooms,
+    eConfig
+}) => {
+    const router = useRouter();
+    const canvasRef = useRef<HTMLCanvasElement>(null);
+    const chartRef = useRef<HTMLCanvasElement>(null);
+    const gameRef = useRef<Game | null>(null);
+    const viewerRef = useRef<Viewer | null>(null);
+
+    const [counts, setCounts] = useState<number[]>([]);
+    const [shroomConfigs, setShroomConfigs] = useState<ShroomConfig[]>(shrooms);
+    const [shroomColors, setShroomColors] = useState<string[]>([]);
+    const [shroomNames, setShroomNames] = useState<string[]>([]);
+    const [shroomBinaryIds, setShroomBinaryIds] = useState<string[]>([]);
+    const [isSimulating, setIsSimulating] = useState(false);
+    const [log, setLog] = useState<string>('');
+    const [tempIndices, setTempIndices] = useState<number[]>([]);
+    const [hoveredShroom, setHoveredShroom] = useState<number | null>(null);
+    const [copied, setCopied] = useState(false);
+    const [wasSimulatingBeforeHover, setWasSimulatingBeforeHover] = useState(false);
+    const [historySteps, setHistorySteps] = useState<string[]>([]);
+    const [currentStepIndex, setCurrentStepIndex] = useState(0);
+    const [draggedShroom, setDraggedShroom] = useState<number | null>(null);
+    const [mousePosition, setMousePosition] = useState<{ x: number; y: number } | null>(null);
+    const [hoveredPixel, setHoveredPixel] = useState<{ x: number; y: number; element: number; shroom: number | null; age: number; triggerSum: number } | null>(null);
+
+    const simulationInterval = useRef<NodeJS.Timeout | null>(null);
+    const chartData = useRef<number[][]>([]);
+    const maxDataPoints = 1000;
+    const urlUpdateTimeout = useRef<NodeJS.Timeout | null>(null);
+    const isUpdatingFromHistory = useRef(false);
+    const hoverTimeout = useRef<NodeJS.Timeout | null>(null);
+
+    // Initialisiere Farben, Namen und Binär-IDs für alle Shrooms
+    useEffect(() => {
+        const colors = shroomConfigs.map(config => generateSeededColor(config.index));
+        const names = shroomConfigs.map(config => mapNumberToMycelName(config.index) || "");
+        const binaryIds = shroomConfigs.map(config => decimalToBinary16(config.index));
+        const indices = shroomConfigs.map(config => config.index);
+
+        setShroomColors(colors);
+        setShroomNames(names);
+        setShroomBinaryIds(binaryIds);
+        setTempIndices(indices);
+    }, [shroomConfigs]);
+
+    // Event-Listener für Browser-Navigation
+    useEffect(() => {
+        const handlePopState = () => {
+            // Parse URL parameters when browser navigation occurs
+            const urlParams = new URLSearchParams(window.location.search);
+            const shroomsParam = urlParams.get('shrooms');
+
+            if (shroomsParam) {
+                try {
+                    const newShrooms = shroomsParam.split(';').map(part => {
+                        const [binaryIndex, x, y] = part.split(',');
+                        const xNum = parseInt(x);
+                        const yNum = parseInt(y);
+
+                        if (isValidBinary16(binaryIndex)) {
+                            const index = binary16ToDecimal(binaryIndex);
+                            return { index, x: xNum, y: yNum };
+                        } else {
+                            const index = parseInt(binaryIndex);
+                            return { index, x: xNum, y: yNum };
+                        }
+                    }).filter(shroom =>
+                        !isNaN(shroom.index) &&
+                        !isNaN(shroom.x) &&
+                        !isNaN(shroom.y) &&
+                        shroom.x >= 0 && shroom.x < width &&
+                        shroom.y >= 0 && shroom.y < height
+                    );
+
+                    if (newShrooms.length >= 2) {
+                        setShroomConfigs(newShrooms);
+                    }
+                } catch (error) {
+                    console.error('Fehler beim Parsen der URL-Parameter:', error);
+                }
+            }
+        };
+
+        window.addEventListener('popstate', handlePopState);
+        return () => window.removeEventListener('popstate', handlePopState);
+    }, [width, height]);
+
+    // Initialize history with current URL
+    useEffect(() => {
+        const currentURL = `/simulator/advanced?width=${width}&height=${height}&shrooms=${shroomConfigs.map(s => `${decimalToBinary16(s.index)},${s.x},${s.y}`).join(';')}`;
+        if (historySteps.length === 0) {
+            setHistorySteps([currentURL]);
+            setCurrentStepIndex(0);
+        }
+    }, []);
+
+    // Simulation Schritt
+    const runSimulation = () => {
+        if (!gameRef.current) return;
+        gameRef.current.evolveAllShrooms(1);
+        viewerRef.current?.render();
+        gameRef.current.count();
+        const currentCounts = gameRef.current.sCount;
+        setCounts([...currentCounts]);
+
+        // Chart-Daten aktualisieren
+        chartData.current = [...chartData.current, [...currentCounts]].slice(-maxDataPoints);
+        drawChart();
+
+        // Prüfe ob Simulation beendet ist (nur noch ein Shroom übrig)
+        const activeShrooms = currentCounts.filter(count => count > 0);
+        if (activeShrooms.length <= 1) {
+            stopSimulation();
+        }
+    };
+
+    const startSimulation = () => {
+        if (simulationInterval.current) return;
+        simulationInterval.current = setInterval(runSimulation, 50);
+        setIsSimulating(true);
+    };
+
+    const stopSimulation = () => {
+        if (simulationInterval.current) {
+            clearInterval(simulationInterval.current);
+            simulationInterval.current = null;
+        }
+        setIsSimulating(false);
+    };
+
+    const stepSimulation = () => {
+        runSimulation();
+    };
+
+    const handleReset = () => {
+        if (!gameRef.current) return;
+        stopSimulation();
+        gameRef.current.cleanData();
+
+        const positions: Position[] = shroomConfigs.map(config => ({ x: config.x, y: config.y }));
+        gameRef.current.shroomStartValues(positions);
+
+        setCounts(new Array(shroomConfigs.length).fill(0));
+        chartData.current = [];
+        viewerRef.current?.render();
+        gameRef.current.count();
+    };
+
+    const handleShroomUpdate = (shroomIndex: number, newIndex: number) => {
+        const newConfigs = [...shroomConfigs];
+        newConfigs[shroomIndex] = { ...newConfigs[shroomIndex], index: newIndex };
+        setShroomConfigs(newConfigs);
+        updateURL(newConfigs, false); // Kein History-Eintrag für einzelne Änderungen
+    };
+
+    const updateURL = (newConfigs: ShroomConfig[], addToHistory: boolean = false, immediate: boolean = false) => {
+        const updateURLInternal = () => {
+            const shroomsParam = newConfigs.map(s => `${decimalToBinary16(s.index)},${s.x},${s.y}`).join(';');
+            const newURL = `/simulator/advanced?width=${width}&height=${height}&shrooms=${shroomsParam}`;
+
+            if (addToHistory) {
+                // Füge zur Browser-History hinzu (für Zurück-Navigation)
+                window.history.pushState(null, '', newURL);
+
+                // Update history steps
+                const newSteps = [...historySteps.slice(0, currentStepIndex + 1), newURL];
+                setHistorySteps(newSteps);
+                setCurrentStepIndex(newSteps.length - 1);
+            } else {
+                // Ersetze aktuelle URL ohne History-Eintrag
+                window.history.replaceState(null, '', newURL);
+            }
+        };
+
+        if (immediate) {
+            // Sofortige Ausführung ohne Debouncing
+            updateURLInternal();
+        } else {
+            // Debounce URL updates to avoid too many navigation calls
+            if (urlUpdateTimeout.current) {
+                clearTimeout(urlUpdateTimeout.current);
+            }
+            urlUpdateTimeout.current = setTimeout(updateURLInternal, 300);
+        }
+    };
+
+    const handleBinaryInputChange = (shroomIndex: number, binaryInput: string) => {
+        // Entferne Leerzeichen und prüfe ob es eine gültige 16-Bit Binärzahl ist
+        const cleanBinary = binaryInput.replace(/\s/g, '');
+
+        if (isValidBinary16(cleanBinary)) {
+            const newIndex = binary16ToDecimal(cleanBinary);
+            handleShroomUpdate(shroomIndex, newIndex);
+        }
+    };
+
+    const handlePositionChange = (shroomIndex: number, newX: number, newY: number) => {
+        const newConfigs = [...shroomConfigs];
+        newConfigs[shroomIndex] = { ...newConfigs[shroomIndex], x: newX, y: newY };
+        setShroomConfigs(newConfigs);
+        updateURL(newConfigs, false); // Kein History-Eintrag für Positionsänderungen
+    };
+
+    const copyURLToClipboard = async () => {
+        const shroomsParam = shroomConfigs.map(s => `${decimalToBinary16(s.index)},${s.x},${s.y}`).join(';');
+        const url = `${window.location.origin}/simulator/advanced?width=${width}&height=${height}&shrooms=${shroomsParam}`;
+
+        try {
+            await navigator.clipboard.writeText(url);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+        } catch (err) {
+            console.error('Fehler beim Kopieren der URL:', err);
+        }
+    };
+
+    // Debug-Funktion für History-Überprüfung
+    const debugHistory = () => {
+        console.log('=== History Debug ===');
+        console.log('Aktuelle URL:', window.location.href);
+        console.log('URL Search:', window.location.search);
+        console.log('History Length:', window.history.length);
+        console.log('Aktuelle Shroom-Configs:', shroomConfigs);
+        console.log('Shroom-IDs:', shroomConfigs.map(s => s.index));
+        console.log('Shroom-Binär-IDs:', shroomConfigs.map(s => decimalToBinary16(s.index)));
+
+        // Parse URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const urlShrooms = urlParams.get('shrooms');
+        console.log('URL Shrooms Parameter:', urlShrooms);
+
+        console.log('===================');
+    };
+
+    const goToHistoryStep = (stepIndex: number) => {
+        if (stepIndex >= 0 && stepIndex < historySteps.length) {
+            const targetURL = historySteps[stepIndex];
+            window.history.pushState(null, '', targetURL);
+            setCurrentStepIndex(stepIndex);
+
+            // Parse URL and update shroom configs
+            const url = new URL(targetURL, window.location.origin);
+            const urlParams = new URLSearchParams(url.search);
+            const shroomsParam = urlParams.get('shrooms');
+
+            if (shroomsParam) {
+                try {
+                    const newShrooms = shroomsParam.split(';').map(part => {
+                        const [binaryIndex, x, y] = part.split(',');
+                        const xNum = parseInt(x);
+                        const yNum = parseInt(y);
+
+                        if (isValidBinary16(binaryIndex)) {
+                            const index = binary16ToDecimal(binaryIndex);
+                            return { index, x: xNum, y: yNum };
+                        } else {
+                            const index = parseInt(binaryIndex);
+                            return { index, x: xNum, y: yNum };
+                        }
+                    }).filter(shroom =>
+                        !isNaN(shroom.index) &&
+                        !isNaN(shroom.x) &&
+                        !isNaN(shroom.y) &&
+                        shroom.x >= 0 && shroom.x < width &&
+                        shroom.y >= 0 && shroom.y < height
+                    );
+
+                    if (newShrooms.length >= 2) {
+                        setShroomConfigs(newShrooms);
+                    }
+                } catch (error) {
+                    console.error('Fehler beim Parsen der URL-Parameter:', error);
+                }
+            }
+        }
+    };
+
+    // Canvas Interaktivität
+    const rectSize = 5; // Aus view.js importiert
+
+    const getCanvasCoordinates = (event: React.MouseEvent<HTMLCanvasElement>) => {
+        const canvas = canvasRef.current;
+        if (!canvas) return null;
+
+        const rect = canvas.getBoundingClientRect();
+        const canvasX = Math.floor((event.clientX - rect.left) * (canvas.width / rect.width));
+        const canvasY = Math.floor((event.clientY - rect.top) * (canvas.height / rect.height));
+
+        // Berechne Offset (wie im Viewer)
+        const offsetX = (canvas.width - width * rectSize) / 2;
+        const offsetY = (canvas.height - height * rectSize) / 2;
+
+        // Konvertiere Canvas-Koordinaten zu Game-Koordinaten
+        // Viewer rendert data[y][x] aber Game verwendet data[x][y]
+        // Also müssen wir die Koordinaten entsprechend anpassen
+        const viewerX = Math.floor((canvasX - offsetX) / rectSize);
+        const viewerY = Math.floor((canvasY - offsetY) / rectSize);
+
+        // Konvertiere von Viewer-Koordinaten zu Game-Koordinaten
+        const gameCoords = { x: viewerY, y: viewerX };
+
+        // Debug-Ausgabe für Koordinaten-Konvertierung
+        if (draggedShroom !== null) {
+            console.log('=== COORDINATES DEBUG ===');
+            console.log('Canvas Rect:', rect);
+            console.log('Canvas Size:', { width: canvas.width, height: canvas.height });
+            console.log('Game Size:', { width, height });
+            console.log('RectSize:', rectSize);
+            console.log('Offsets:', { offsetX, offsetY });
+            console.log('Raw Canvas Coords:', { canvasX, canvasY });
+            console.log('Viewer Coords:', { viewerX, viewerY });
+            console.log('Game Coords:', gameCoords);
+            console.log('=== COORDINATES DEBUG END ===');
+        }
+
+        return gameCoords;
+    };
+
+    const getPixelValue = (x: number, y: number) => {
+        if (!gameRef.current || x < 0 || x >= width || y < 0 || y >= height) return null;
+        const field = gameRef.current.data[x][y]; // data[x][y] wie im Game
+        return {
+            element: field?.element || 0,
+            shroom: field?.shroom,
+            age: field?.age || 0,
+            triggerSum: field?.triggerSum || 0
+        };
+    };
+
+    const handleCanvasMouseMove = (event: React.MouseEvent<HTMLCanvasElement>) => {
+        const coords = getCanvasCoordinates(event);
+        if (!coords) return;
+
+
+        setMousePosition(coords);
+
+        // Get pixel value for hover info
+        const pixelValue = getPixelValue(coords.x, coords.y);
+        if (pixelValue !== null) {
+            setHoveredPixel({
+                x: coords.x,
+                y: coords.y,
+                element: pixelValue.element,
+                shroom: pixelValue.shroom,
+                age: pixelValue.age,
+                triggerSum: pixelValue.triggerSum
+            });
+        } else {
+            setHoveredPixel(null);
+        }
+
+        // Optional: Show visual feedback during drag
+        if (draggedShroom !== null) {
+            console.log('Dragging shroom', draggedShroom, 'at position', coords);
+        }
+
+        //if release mouse button, update url
+    };
+
+    const handleCanvasMouseDown = (event: React.MouseEvent<HTMLCanvasElement>) => {
+        const coords = getCanvasCoordinates(event);
+        if (!coords) return;
+
+        console.log("mouse down", coords);
+
+        // Check if clicking on a shroom position (any pixel within 2 pixels of shroom)
+        const clickedShroomIndex = shroomConfigs.findIndex(
+            shroom => Math.abs(shroom.x - coords.x) <= 2 && Math.abs(shroom.y - coords.y) <= 2
+        );
+
+        if (clickedShroomIndex !== -1) {
+            console.log("Selected shroom index:", clickedShroomIndex);
+            setDraggedShroom(clickedShroomIndex);
+        }
+    };
+
+    const handleCanvasMouseUp = (event: React.MouseEvent<HTMLCanvasElement>) => {
+        const coords = getCanvasCoordinates(event);
+
+        console.log("mouse up", coords);
+        if (draggedShroom !== null && coords) {
+            console.log("Setting new position for shroom", draggedShroom, "to", coords);
+
+            // Setze die neue Shroom-Startposition
+            const newConfigs = [...shroomConfigs];
+            newConfigs[draggedShroom] = {
+                ...newConfigs[draggedShroom],
+                x: coords.x,
+                y: coords.y
+            };
+
+            // Update Shroom-Configs und URL
+            setShroomConfigs(newConfigs);
+            updateURL(newConfigs, true, true);
+
+            // Reset
+            setDraggedShroom(null);
+        }
+    };
+
+
+
+    const handleCanvasMouseLeave = () => {
+        setMousePosition(null);
+        setHoveredPixel(null);
+        if (draggedShroom !== null) {
+            updateURL(shroomConfigs, true, true);
+            setDraggedShroom(null);
+        }
+    };
+
+
+
+    const handleRandomizeAll = () => {
+        const newConfigs = shroomConfigs.map(config => ({
+            ...config,
+            index: Math.floor(Math.random() * 12188)
+        }));
+
+        // Prüfe ob sich die Konfiguration tatsächlich geändert hat
+        const hasChanged = newConfigs.some((newConfig, index) =>
+            newConfig.index !== shroomConfigs[index].index
+        );
+
+        if (hasChanged) {
+            setShroomConfigs(newConfigs);
+            updateURL(newConfigs, true, true); // History + sofortige Ausführung
+        }
+    };
+
+    const addShroom = () => {
+        const newShroom: ShroomConfig = {
+            index: Math.floor(Math.random() * 12188),
+            x: Math.floor(Math.random() * (width - 60)) + 30,
+            y: Math.floor(Math.random() * (height - 60)) + 30
+        };
+        const newConfigs = [...shroomConfigs, newShroom];
+        setShroomConfigs(newConfigs);
+        updateURL(newConfigs, true, true); // History + sofortige Ausführung
+    };
+
+    const removeShroom = (index: number) => {
+        if (shroomConfigs.length > 2) {
+            const newConfigs = shroomConfigs.filter((_, i) => i !== index);
+            setShroomConfigs(newConfigs);
+            updateURL(newConfigs, true, true); // History + sofortige Ausführung
+        }
+    };
+
+    // Beim Initialisieren oder bei Änderungen neu aufsetzen
+    useEffect(() => {
+        stopSimulation();
+        const initGame = () => {
+            const canvas = canvasRef.current;
+            if (!canvas) return;
+
+            const ruleSets = shroomConfigs.map(config => generateRuleSetByIndex(config.index));
+            const colors = shroomConfigs.map(config => generateSeededColor(config.index));
+
+            const newGame = new Game(
+                eConfig,
+                {
+                    shrooms: ruleSets,
+                    shroomColors: colors
+                },
+                width,
+                height
+            );
+
+            const positions: Position[] = shroomConfigs.map(config => ({ x: config.x, y: config.y }));
+            newGame.shroomStartValues(positions);
+
+            const newViewer = new Viewer(newGame, canvas);
+            gameRef.current = newGame;
+            viewerRef.current = newViewer;
+            chartData.current = [];
+            setCounts(new Array(shroomConfigs.length).fill(0));
+        };
+
+        initGame();
+        startSimulation();
+
+        return () => {
+            gameRef.current = null;
+            if (simulationInterval.current) {
+                clearInterval(simulationInterval.current);
+            }
+            if (urlUpdateTimeout.current) {
+                clearTimeout(urlUpdateTimeout.current);
+            }
+            if (hoverTimeout.current) {
+                clearTimeout(hoverTimeout.current);
+            }
+        };
+    }, [eConfig, width, height]); // Entferne shroomConfigs aus den Dependencies
+
+    // Separates useEffect für Shroom-Konfigurationsänderungen
+    useEffect(() => {
+        if (gameRef.current) {
+            stopSimulation();
+
+            // Erstelle ein neues Game mit den aktualisierten Shrooms
+            const ruleSets = shroomConfigs.map(config => generateRuleSetByIndex(config.index));
+            const colors = shroomConfigs.map(config => generateSeededColor(config.index));
+
+            const newGame = new Game(
+                eConfig,
+                {
+                    shrooms: ruleSets,
+                    shroomColors: colors
+                },
+                width,
+                height
+            );
+
+            const positions: Position[] = shroomConfigs.map(config => ({ x: config.x, y: config.y }));
+            newGame.shroomStartValues(positions);
+
+            gameRef.current = newGame;
+            viewerRef.current = new Viewer(newGame, canvasRef.current!);
+            viewerRef.current.render();
+            gameRef.current.count();
+            setCounts(new Array(shroomConfigs.length).fill(0));
+            chartData.current = [];
+
+            startSimulation();
+        }
+    }, [shroomConfigs, eConfig, width, height]);
+
+    const drawChart = () => {
+        const canvas = chartRef.current;
+        if (!canvas) return;
+
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        const margin = 20;
+        const chartWidth = canvas.width - margin * 2;
+        const chartHeight = canvas.height - margin * 2;
+        const dataLength = chartData.current.length;
+        const stepX = chartWidth / Math.max(dataLength - 1, 1);
+
+        if (dataLength === 0) return;
+
+        // Zeichne Bereiche für jeden Shroom
+        shroomColors.forEach((color, shroomIndex) => {
+            ctx.beginPath();
+            ctx.moveTo(margin, margin + chartHeight);
+
+            chartData.current.forEach((dataPoint, index) => {
+                const x = margin + index * stepX;
+                const total = dataPoint.reduce((sum, count) => sum + count, 0);
+                const ratio = total > 0 ? dataPoint[shroomIndex] / total : 0;
+                const y = margin + chartHeight - (ratio * chartHeight);
+                ctx.lineTo(x, y);
+            });
+
+            ctx.lineTo(margin + dataLength * stepX, margin + chartHeight);
+            ctx.closePath();
+            ctx.fillStyle = `${color}60`;
+            ctx.fill();
+        });
+
+        // Raster
+        ctx.strokeStyle = '#444';
+        ctx.beginPath();
+        ctx.moveTo(margin, margin);
+        ctx.lineTo(margin, margin + chartHeight);
+        ctx.lineTo(margin + chartWidth, margin + chartHeight);
+        ctx.stroke();
+
+        // Aktuelle Verhältnisse als Text
+        ctx.fillStyle = '#fff';
+        ctx.font = '12px monospace';
+        const currentData = chartData.current[chartData.current.length - 1] || [];
+        const total = currentData.reduce((sum, count) => sum + count, 0);
+
+        let yOffset = margin + 15;
+        currentData.forEach((count, index) => {
+            const percentage = total > 0 ? (count / total * 100).toFixed(1) : '0.0';
+            ctx.fillStyle = shroomColors[index];
+            ctx.fillText(`${shroomNames[index]}: ${count} (${percentage}%)`, margin + 10, yOffset);
+            yOffset += 15;
+        });
+    };
+
+    return (
+        <div className="flex flex-col items-center p-4 bg-gray-900">
+            {/* Shroom-Konfiguration */}
+            <div className="flex flex-wrap gap-2 mb-4 max-w-4xl">
+                {shroomConfigs.map((config, index) => (
+                    <div key={index} className="relative w-56">
+                        <div
+                            className="flex items-center p-2 rounded cursor-pointer"
+                            style={{ backgroundColor: shroomColors[index] + '20' }} // 20 = 12% opacity
+                            onMouseEnter={() => {
+                                if (hoverTimeout.current) {
+                                    clearTimeout(hoverTimeout.current);
+                                }
+                                setHoveredShroom(index);
+                                // Pause simulation when popup opens
+                                if (isSimulating) {
+                                    setWasSimulatingBeforeHover(true);
+                                    stopSimulation();
+                                } else {
+                                    setWasSimulatingBeforeHover(false);
+                                }
+                            }}
+                            onMouseLeave={() => {
+                                hoverTimeout.current = setTimeout(() => {
+                                    setHoveredShroom(null);
+                                    // Resume simulation if it was running before
+                                    if (wasSimulatingBeforeHover) {
+                                        startSimulation();
+                                        setWasSimulatingBeforeHover(false);
+                                    }
+                                }, 300); // 300ms Verzögerung
+                            }}
+                        >
+                            <span className="text-white mr-2">#{index + 1}</span>
+                            <div className="flex flex-col">
+                                <input
+                                    type="text"
+                                    value={shroomNames[index] || ""}
+                                    onChange={(e) => {
+                                        const value = e.target.value;
+                                        const parsed = parseMycelName(value);
+                                        if (parsed !== null) {
+                                            handleShroomUpdate(index, parsed);
+                                        }
+                                    }}
+                                    placeholder="Name"
+                                    className="bg-gray-700 text-white p-1 rounded text-xs w-24 mb-1"
+                                />
+                                <input
+                                    type="text"
+                                    value={formatBinary16(shroomBinaryIds[index] || "0000000000000000")}
+                                    onChange={(e) => handleBinaryInputChange(index, e.target.value)}
+                                    placeholder="0000 0000 0000 0000"
+                                    className="bg-gray-700 text-green-400 p-1 rounded text-xs w-32 font-mono"
+                                />
+                            </div>
+                            <div className="flex flex-col ml-2">
+                                <div className="text-white text-xs">Position: {config.x}, {config.y}</div>
+                            </div>
+                            {shroomConfigs.length > 2 && (
+                                <button
+                                    onClick={() => removeShroom(index)}
+                                    className="ml-2 text-red-400 hover:text-red-200"
+                                >
+                                    ×
+                                </button>
+                            )}
+                        </div>
+
+                        {hoveredShroom === index && (
+                            <div
+                                className="absolute top-full left-0 z-10"
+                                onMouseEnter={() => {
+                                    if (hoverTimeout.current) {
+                                        clearTimeout(hoverTimeout.current);
+                                    }
+                                    setHoveredShroom(index);
+                                    // Pause simulation when popup opens
+                                    if (isSimulating) {
+                                        setWasSimulatingBeforeHover(true);
+                                        stopSimulation();
+                                    } else {
+                                        setWasSimulatingBeforeHover(false);
+                                    }
+                                }}
+                                onMouseLeave={() => {
+                                    hoverTimeout.current = setTimeout(() => {
+                                        setHoveredShroom(null);
+                                        // Resume simulation if it was running before
+                                        if (wasSimulatingBeforeHover) {
+                                            startSimulation();
+                                            setWasSimulatingBeforeHover(false);
+                                        }
+                                    }, 300); // 300ms Verzögerung
+                                }}
+                            >
+                                <ShroomHoverCard
+                                    id={config.index}
+                                    shroomColor={shroomColors[index]}
+                                    log={log}
+                                    setLog={setLog}
+                                    setIndex={(newIndex) => {
+                                        const newIndices = [...tempIndices];
+                                        newIndices[index] = newIndex;
+                                        setTempIndices(newIndices);
+                                    }}
+                                    go={(newIndex) => {
+                                        const newConfigs = [...shroomConfigs];
+                                        newConfigs[index] = { ...newConfigs[index], index: newIndex };
+                                        setShroomConfigs(newConfigs);
+                                        updateURL(newConfigs, true, true);
+                                    }}
+                                    goAndReset={(newIndex) => {
+                                        const newConfigs = [...shroomConfigs];
+                                        newConfigs[index] = { ...newConfigs[index], index: newIndex };
+                                        setShroomConfigs(newConfigs);
+                                        updateURL(newConfigs, true, true);
+                                        handleReset();
+                                    }}
+
+                                />
+                            </div>
+                        )}
+                    </div>
+                ))}
+            </div>
+
+            {/* Steuerung */}
+            <div className="flex items-center mb-4 gap-2">
+                {hoveredShroom !== null && wasSimulatingBeforeHover && (
+                    <div className="text-yellow-400 text-sm mr-2">
+                        ⏸ Pausiert für DNA-Editierung
+                    </div>
+                )}
+                <button
+                    className="px-4 py-2 text-white bg-gray-800 rounded-lg hover:bg-gray-600 transition-colors"
+                    onClick={handleReset}
+                >
+                    Reset
+                </button>
+                <button
+                    className="px-4 py-2 text-white bg-gray-800 rounded-lg hover:bg-gray-600 transition-colors"
+                    onClick={stopSimulation}
+                    disabled={!isSimulating}
+                >
+                    ⏸
+                </button>
+                <button
+                    className="px-4 py-2 text-white bg-gray-800 rounded-lg hover:bg-gray-600 transition-colors"
+                    onClick={stepSimulation}
+                    disabled={isSimulating}
+                >
+                    ⏯
+                </button>
+                <button
+                    className="px-4 py-2 text-white bg-gray-800 rounded-lg hover:bg-gray-600 transition-colors"
+                    onClick={startSimulation}
+                    disabled={isSimulating}
+                >
+                    ⏵
+                </button>
+                <button
+                    className="px-4 py-2 text-white bg-gray-800 rounded-lg hover:bg-gray-600 transition-colors"
+                    onClick={handleRandomizeAll}
+                >
+                    🎲 Alle
+                </button>
+                <button
+                    className="px-4 py-2 text-white bg-green-800 rounded-lg hover:bg-green-600 transition-colors"
+                    onClick={addShroom}
+                >
+                    + Shroom
+                </button>
+            </div>
+
+            {/* Canvas */}
+            <div className="relative mb-4">
+                <canvas
+                    ref={canvasRef}
+                    width={width}
+                    height={height}
+                    className="border-2 border-gray-700 rounded-lg cursor-crosshair"
+                    onMouseMove={handleCanvasMouseMove}
+                    onMouseDown={handleCanvasMouseDown}
+                    onMouseUp={handleCanvasMouseUp}
+                    onMouseLeave={handleCanvasMouseLeave}
+                />
+
+                {/* Pixel Info Overlay */}
+                {hoveredPixel && (
+                    <div className="absolute top-2 left-2 bg-black bg-opacity-75 text-white p-2 rounded text-xs">
+                        <div>Pixel: ({hoveredPixel.x}, {hoveredPixel.y})</div>
+                        <div>Element: {hoveredPixel.element}</div>
+                        <div>Shroom: {hoveredPixel.shroom !== null ? `#${hoveredPixel.shroom + 1}` : 'None'}</div>
+                        <div>Age: {hoveredPixel.age}</div>
+                        <div>Trigger: {hoveredPixel.triggerSum}</div>
+                    </div>
+                )}
+
+                {/* Shroom Position Indicators - immer sichtbar */}
+                {shroomConfigs.map((config, index) => {
+                    // Berechne Canvas-Position basierend auf rectSize und Offset
+                    // Konvertiere von Game-Koordinaten zu Viewer-Koordinaten
+                    const canvasWidth = canvasRef.current?.width || width * rectSize;
+                    const canvasHeight = canvasRef.current?.height || height * rectSize;
+                    const offsetX = (canvasWidth - width * rectSize) / 2;
+                    const offsetY = (canvasHeight - height * rectSize) / 2;
+
+                    // Verwende normale Shroom-Position
+                    const currentX = config.x;
+                    const currentY = config.y;
+
+                    // Game-Koordinaten zu Viewer-Koordinaten konvertieren
+                    const viewerX = currentY; // Game X → Viewer X
+                    const viewerY = currentX; // Game Y → Viewer Y
+
+                    const canvasX = offsetX + viewerX * rectSize + rectSize / 2;
+                    const canvasY = offsetY + viewerY * rectSize + rectSize / 2;
+
+                    return (
+                        <div
+                            key={index}
+                            className="absolute w-6 h-6 border-2 rounded-full"
+                            style={{
+                                left: `${(canvasX / canvasWidth) * 100}%`,
+                                top: `${(canvasY / canvasHeight) * 100}%`,
+                                transform: 'translate(-50%, -50%)',
+                                backgroundColor: draggedShroom === index ? 'rgba(255, 255, 255, 0.5)' : 'rgba(255, 255, 255, 0.1)',
+                                borderColor: shroomColors[index],
+                                borderWidth: draggedShroom === index ? '3px' : '2px',
+                                zIndex: draggedShroom === index ? 10 : 5,
+                                cursor: 'grab'
+                            }}
+                            onMouseDown={(e) => {
+                                e.stopPropagation();
+                                console.log('Mouse Down - Start Position:', { x: config.x, y: config.y });
+                                setDraggedShroom(index);
+                            }}
+                        />
+                    );
+                })}
+
+                <div className="absolute bottom-2 left-2 right-2 flex justify-between text-sm">
+                    {counts.map((count, index) => (
+                        <span key={index} style={{ color: shroomColors[index] }}>
+                            {count}
+                        </span>
+                    ))}
+                </div>
+            </div>
+
+            {/* Chart */}
+            <canvas
+                ref={chartRef}
+                width={800}
+                height={200}
+                className="border-2 border-gray-700 rounded-lg"
+            />
+
+            {/* URL-Info */}
+            <div className="mt-4 text-sm text-gray-400 text-center">
+                <p>Grid: {width}×{height} | Shrooms: {shroomConfigs.length}</p>
+                <p className="text-xs mt-1">
+                    URL-Parameter: width={width}&height={height}&shrooms={
+                        shroomConfigs.map(s => `${decimalToBinary16(s.index)},${s.x},${s.y}`).join(';')
+                    }
+                </p>
+                <div className="mt-4 flex gap-4">
+                    <button
+                        onClick={copyURLToClipboard}
+                        className={`px-6 py-3 rounded-lg transition-colors text-lg font-semibold ${copied
+                            ? 'bg-green-600 text-white'
+                            : 'bg-blue-600 hover:bg-blue-700 text-white'
+                            }`}
+                    >
+                        {copied ? '✓ URL kopiert!' : '📋 URL kopieren'}
+                    </button>
+                    <button
+                        onClick={debugHistory}
+                        className="px-6 py-3 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors text-lg font-semibold"
+                    >
+                        🐛 Debug History
+                    </button>
+                </div>
+            </div>
+
+            {/* History Steps */}
+            {historySteps.length > 0 && (
+                <div className="mt-6 p-4 bg-gray-800 rounded-lg">
+                    <h3 className="text-white font-semibold mb-3">URL History Steps</h3>
+                    <div className="flex flex-wrap gap-2">
+                        {historySteps.map((step, index) => (
+                            <button
+                                key={index}
+                                onClick={() => goToHistoryStep(index)}
+                                className={`px-3 py-2 rounded text-xs font-mono transition-colors ${index === currentStepIndex
+                                    ? 'bg-green-600 text-white'
+                                    : 'bg-gray-700 hover:bg-gray-600 text-gray-300'
+                                    }`}
+                                title={`Step ${index + 1}: ${step}`}
+                            >
+                                {index + 1}
+                            </button>
+                        ))}
+                    </div>
+                    <div className="mt-2 text-xs text-gray-400">
+                        Aktueller Schritt: {currentStepIndex + 1} von {historySteps.length}
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};
+
+export default AdvancedBattleSimulator; 
