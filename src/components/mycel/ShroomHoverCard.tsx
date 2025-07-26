@@ -29,7 +29,6 @@ export const ShroomHoverCard: React.FC<ShroomHoverCardProps> = ({
     setLog,
     setIndex,
     go,
-    goAndReset,
 }) => {
     const [initialExpansion, setInitialExpansion] = useState<number[]>([]);
     const [initialDissolve, setInitialDissolve] = useState<number[]>([]);

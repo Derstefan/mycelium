@@ -9,7 +9,6 @@ import { generateSeededColor } from '../script/utils';
 import { mapNumberToMycelName, parseMycelName } from '../script/namegenerator';
 import { ShroomHoverCard } from './mycel/ShroomHoverCard';
 import { decimalToBinary16, binary16ToDecimal, isValidBinary16, formatBinary16 } from '../utils/binaryUtils';
-import { useRouter } from 'next/navigation';
 
 interface ShroomConfig {
     index: number;
@@ -59,7 +58,6 @@ const AdvancedBattleSimulator: React.FC<AdvancedBattleSimulatorProps> = ({
     const chartData = useRef<number[][]>([]);
     const maxDataPoints = 1000;
     const urlUpdateTimeout = useRef<NodeJS.Timeout | null>(null);
-    const isUpdatingFromHistory = useRef(false);
     const hoverTimeout = useRef<NodeJS.Timeout | null>(null);
 
     // Keyboard event handler for space key
@@ -243,85 +241,9 @@ const AdvancedBattleSimulator: React.FC<AdvancedBattleSimulatorProps> = ({
         }
     };
 
-    const handlePositionChange = (shroomIndex: number, newX: number, newY: number) => {
-        const newConfigs = [...shroomConfigs];
-        newConfigs[shroomIndex] = { ...newConfigs[shroomIndex], x: newX, y: newY };
-        setShroomConfigs(newConfigs);
-        updateURL(newConfigs, false); // Kein History-Eintrag für Positionsänderungen
-    };
 
-    const copyURLToClipboard = async () => {
-        const shroomsParam = shroomConfigs.map(s => `${decimalToBinary16(s.index)},${s.x},${s.y}`).join(';');
-        const url = `${window.location.origin}/simulator/advanced?width=${width}&height=${height}&shrooms=${shroomsParam}`;
 
-        try {
-            await navigator.clipboard.writeText(url);
-            console.log('URL kopiert:', url);
-        } catch (err) {
-            console.error('Fehler beim Kopieren der URL:', err);
-        }
-    };
 
-    // Debug-Funktion für History-Überprüfung
-    const debugHistory = () => {
-        console.log('=== History Debug ===');
-        console.log('Aktuelle URL:', window.location.href);
-        console.log('URL Search:', window.location.search);
-        console.log('History Length:', window.history.length);
-        console.log('Aktuelle Shroom-Configs:', shroomConfigs);
-        console.log('Shroom-IDs:', shroomConfigs.map(s => s.index));
-        console.log('Shroom-Binär-IDs:', shroomConfigs.map(s => decimalToBinary16(s.index)));
-
-        // Parse URL parameters
-        const urlParams = new URLSearchParams(window.location.search);
-        const urlShrooms = urlParams.get('shrooms');
-        console.log('URL Shrooms Parameter:', urlShrooms);
-
-        console.log('===================');
-    };
-
-    const goToHistoryStep = (stepIndex: number) => {
-        if (stepIndex >= 0 && stepIndex < historySteps.length) {
-            const targetURL = historySteps[stepIndex];
-            window.history.pushState(null, '', targetURL);
-            setCurrentStepIndex(stepIndex);
-
-            // Parse URL and update shroom configs
-            const url = new URL(targetURL, window.location.origin);
-            const urlParams = new URLSearchParams(url.search);
-            const shroomsParam = urlParams.get('shrooms');
-
-            if (shroomsParam) {
-                try {
-                    const newShrooms = shroomsParam.split(';').map(part => {
-                        const [binaryIndex, x, y] = part.split(',');
-                        const xNum = parseInt(x);
-                        const yNum = parseInt(y);
-
-                        if (isValidBinary16(binaryIndex)) {
-                            const index = binary16ToDecimal(binaryIndex);
-                            return { index, x: xNum, y: yNum };
-                        } else {
-                            const index = parseInt(binaryIndex);
-                            return { index, x: xNum, y: yNum };
-                        }
-                    }).filter(shroom =>
-                        !isNaN(shroom.index) &&
-                        !isNaN(shroom.x) &&
-                        !isNaN(shroom.y) &&
-                        shroom.x >= 0 && shroom.x < width &&
-                        shroom.y >= 0 && shroom.y < height
-                    );
-
-                    if (newShrooms.length >= 2) {
-                        setShroomConfigs(newShrooms);
-                    }
-                } catch (error) {
-                    console.error('Fehler beim Parsen der URL-Parameter:', error);
-                }
-            }
-        }
-    };
 
     // Canvas Interaktivität
     const rectSize = 5; // Aus view.js importiert
