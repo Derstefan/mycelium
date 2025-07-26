@@ -49,6 +49,7 @@ const AdvancedBattleSimulator: React.FC<AdvancedBattleSimulatorProps> = ({
     const [hoveredShroom, setHoveredShroom] = useState<number | null>(null);
     const [copied, setCopied] = useState(false);
     const [wasSimulatingBeforeHover, setWasSimulatingBeforeHover] = useState(false);
+    const [wasSimulatingBeforeDrag, setWasSimulatingBeforeDrag] = useState(false);
     const [historySteps, setHistorySteps] = useState<string[]>([]);
     const [currentStepIndex, setCurrentStepIndex] = useState(0);
     const [draggedShroom, setDraggedShroom] = useState<number | null>(null);
@@ -61,6 +62,23 @@ const AdvancedBattleSimulator: React.FC<AdvancedBattleSimulatorProps> = ({
     const urlUpdateTimeout = useRef<NodeJS.Timeout | null>(null);
     const isUpdatingFromHistory = useRef(false);
     const hoverTimeout = useRef<NodeJS.Timeout | null>(null);
+
+    // Keyboard event handler for space key
+    useEffect(() => {
+        const handleKeyDown = (event: KeyboardEvent) => {
+            if (event.code === 'Space') {
+                event.preventDefault(); // Prevent page scroll
+                if (isSimulating) {
+                    stopSimulation();
+                } else {
+                    startSimulation();
+                }
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [isSimulating]);
 
     // Initialisiere Farben, Namen und Binär-IDs für alle Shrooms
     useEffect(() => {
@@ -400,9 +418,25 @@ const AdvancedBattleSimulator: React.FC<AdvancedBattleSimulatorProps> = ({
             shroom => Math.abs(shroom.x - coords.x) <= 2 && Math.abs(shroom.y - coords.y) <= 2
         );
 
-        if (clickedShroomIndex !== -1) {
-            console.log("Selected shroom index:", clickedShroomIndex);
-            setDraggedShroom(clickedShroomIndex);
+        // If no shroom clicked directly, check if we're hovering over a shroom
+        let selectedShroomIndex = clickedShroomIndex;
+        if (selectedShroomIndex === -1 && hoveredPixel && hoveredPixel.shroom !== null) {
+            selectedShroomIndex = hoveredPixel.shroom;
+            console.log("Selected shroom from hover:", selectedShroomIndex);
+        }
+
+        if (selectedShroomIndex !== -1) {
+            console.log("Selected shroom index:", selectedShroomIndex);
+            setDraggedShroom(selectedShroomIndex);
+
+            // Pause simulation when starting to drag
+            if (isSimulating) {
+                console.log("Pausing simulation for drag");
+                setWasSimulatingBeforeDrag(true);
+                stopSimulation();
+            } else {
+                setWasSimulatingBeforeDrag(false);
+            }
         }
     };
 
@@ -427,6 +461,13 @@ const AdvancedBattleSimulator: React.FC<AdvancedBattleSimulatorProps> = ({
 
             // Reset
             setDraggedShroom(null);
+
+            // Resume simulation if it was running before drag
+            if (wasSimulatingBeforeDrag) {
+                console.log("Resuming simulation after drag");
+                startSimulation();
+                setWasSimulatingBeforeDrag(false);
+            }
         }
     };
 
@@ -619,11 +660,11 @@ const AdvancedBattleSimulator: React.FC<AdvancedBattleSimulatorProps> = ({
     };
 
     return (
-        <div className="flex flex-col items-center p-4 bg-gray-900">
+        <div className="flex flex-col items-center p-2 sm:p-4 bg-gray-900 min-h-screen">
             {/* Shroom-Konfiguration */}
-            <div className="flex flex-wrap gap-2 mb-4 max-w-4xl">
+            <div className="flex flex-col sm:flex-row flex-wrap gap-2 mb-4 w-full max-w-4xl">
                 {shroomConfigs.map((config, index) => (
-                    <div key={index} className="relative w-56">
+                    <div key={index} className="relative w-full sm:w-56">
                         <div
                             className="flex items-center p-2 rounded cursor-pointer"
                             style={{ backgroundColor: shroomColors[index] + '20' }} // 20 = 12% opacity
@@ -674,8 +715,8 @@ const AdvancedBattleSimulator: React.FC<AdvancedBattleSimulatorProps> = ({
                                     className="bg-gray-700 text-green-400 p-1 rounded text-xs w-32 font-mono"
                                 />
                             </div>
-                            <div className="flex flex-col ml-2">
-                                <div className="text-white text-xs">Position: {config.x}, {config.y}</div>
+                            <div className="flex flex-col ml-2 min-w-0">
+                                <div className="text-white text-xs truncate">{config.x}, {config.y}</div>
                             </div>
                             {shroomConfigs.length > 2 && (
                                 <button
@@ -746,64 +787,87 @@ const AdvancedBattleSimulator: React.FC<AdvancedBattleSimulatorProps> = ({
             </div>
 
             {/* Steuerung */}
-            <div className="flex items-center mb-4 gap-2">
-                {hoveredShroom !== null && wasSimulatingBeforeHover && (
-                    <div className="text-yellow-400 text-sm mr-2">
-                        ⏸ Pausiert für DNA-Editierung
-                    </div>
-                )}
+            <div className="flex flex-col items-center mb-4 gap-2 w-full">
                 <button
-                    className="px-4 py-2 text-white bg-gray-800 rounded-lg hover:bg-gray-600 transition-colors"
-                    onClick={handleReset}
-                >
-                    Reset
-                </button>
-                <button
-                    className="px-4 py-2 text-white bg-gray-800 rounded-lg hover:bg-gray-600 transition-colors"
-                    onClick={stopSimulation}
-                    disabled={!isSimulating}
-                >
-                    ⏸
-                </button>
-                <button
-                    className="px-4 py-2 text-white bg-gray-800 rounded-lg hover:bg-gray-600 transition-colors"
-                    onClick={stepSimulation}
-                    disabled={isSimulating}
-                >
-                    ⏯
-                </button>
-                <button
-                    className="px-4 py-2 text-white bg-gray-800 rounded-lg hover:bg-gray-600 transition-colors"
-                    onClick={startSimulation}
-                    disabled={isSimulating}
-                >
-                    ⏵
-                </button>
-                <button
-                    className="px-4 py-2 text-white bg-gray-800 rounded-lg hover:bg-gray-600 transition-colors"
-                    onClick={handleRandomizeAll}
-                >
-                    🎲 Alle
-                </button>
-                <button
-                    className="px-4 py-2 text-white bg-green-800 rounded-lg hover:bg-green-600 transition-colors"
+                    className="px-4 py-2 text-white bg-green-800 rounded-lg hover:bg-green-600 transition-colors w-full sm:w-auto"
                     onClick={addShroom}
                 >
                     + Shroom
                 </button>
+
+                <div className="flex flex-wrap items-center justify-center gap-2 w-full">
+                    {hoveredShroom !== null && wasSimulatingBeforeHover && (
+                        <div className="text-yellow-400 text-sm mr-2">
+                            ⏸ Pausiert für DNA-Editierung
+                        </div>
+                    )}
+                    <button
+                        className="px-3 py-2 text-white bg-gray-800 rounded-lg hover:bg-gray-600 transition-colors text-sm"
+                        onClick={handleReset}
+                    >
+                        Reset
+                    </button>
+                    <button
+                        className="px-3 py-2 text-white bg-gray-800 rounded-lg hover:bg-gray-600 transition-colors text-sm"
+                        onClick={isSimulating ? stopSimulation : startSimulation}
+                    >
+                        {isSimulating ? '⏸' : '⏵'}
+                    </button>
+                    <button
+                        className="px-3 py-2 text-white bg-gray-800 rounded-lg hover:bg-gray-600 transition-colors text-sm"
+                        onClick={stepSimulation}
+                        disabled={isSimulating}
+                    >
+                        ⏯
+                    </button>
+                    <button
+                        className="px-3 py-2 text-white bg-gray-800 rounded-lg hover:bg-gray-600 transition-colors text-sm"
+                        onClick={handleRandomizeAll}
+                    >
+                        🎲
+                    </button>
+
+                </div>
             </div>
 
             {/* Canvas */}
-            <div className="relative mb-4">
+            <div className="relative mb-4 w-full flex justify-center">
                 <canvas
                     ref={canvasRef}
                     width={width}
                     height={height}
-                    className="border-2 border-gray-700 rounded-lg cursor-crosshair"
+                    className="border-2 border-gray-700 rounded-lg cursor-crosshair max-w-full h-auto"
                     onMouseMove={handleCanvasMouseMove}
                     onMouseDown={handleCanvasMouseDown}
                     onMouseUp={handleCanvasMouseUp}
                     onMouseLeave={handleCanvasMouseLeave}
+                    onTouchStart={(e) => {
+                        e.preventDefault();
+                        const touch = e.touches[0];
+                        const rect = e.currentTarget.getBoundingClientRect();
+                        const x = touch.clientX - rect.left;
+                        const y = touch.clientY - rect.top;
+                        const event = { clientX: x, clientY: y } as React.MouseEvent<HTMLCanvasElement>;
+                        handleCanvasMouseDown(event);
+                    }}
+                    onTouchMove={(e) => {
+                        e.preventDefault();
+                        const touch = e.touches[0];
+                        const rect = e.currentTarget.getBoundingClientRect();
+                        const x = touch.clientX - rect.left;
+                        const y = touch.clientY - rect.top;
+                        const event = { clientX: x, clientY: y } as React.MouseEvent<HTMLCanvasElement>;
+                        handleCanvasMouseMove(event);
+                    }}
+                    onTouchEnd={(e) => {
+                        e.preventDefault();
+                        const touch = e.changedTouches[0];
+                        const rect = e.currentTarget.getBoundingClientRect();
+                        const x = touch.clientX - rect.left;
+                        const y = touch.clientY - rect.top;
+                        const event = { clientX: x, clientY: y } as React.MouseEvent<HTMLCanvasElement>;
+                        handleCanvasMouseUp(event);
+                    }}
                 />
 
                 {/* Pixel Info Overlay */}
@@ -817,8 +881,8 @@ const AdvancedBattleSimulator: React.FC<AdvancedBattleSimulatorProps> = ({
                     </div>
                 )}
 
-                {/* Shroom Position Indicators - immer sichtbar */}
-                {shroomConfigs.map((config, index) => {
+                {/* Shroom Position Indicators - Only show when hovering canvas */}
+                {mousePosition && shroomConfigs.map((config, index) => {
                     // Berechne Canvas-Position basierend auf rectSize und Offset
                     // Konvertiere von Game-Koordinaten zu Viewer-Koordinaten
                     const canvasWidth = canvasRef.current?.width || width * rectSize;
@@ -870,64 +934,16 @@ const AdvancedBattleSimulator: React.FC<AdvancedBattleSimulatorProps> = ({
             </div>
 
             {/* Chart */}
-            <canvas
-                ref={chartRef}
-                width={800}
-                height={200}
-                className="border-2 border-gray-700 rounded-lg"
-            />
-
-            {/* URL-Info */}
-            <div className="mt-4 text-sm text-gray-400 text-center">
-                <p>Grid: {width}×{height} | Shrooms: {shroomConfigs.length}</p>
-                <p className="text-xs mt-1">
-                    URL-Parameter: width={width}&height={height}&shrooms={
-                        shroomConfigs.map(s => `${decimalToBinary16(s.index)},${s.x},${s.y}`).join(';')
-                    }
-                </p>
-                <div className="mt-4 flex gap-4">
-                    <button
-                        onClick={copyURLToClipboard}
-                        className={`px-6 py-3 rounded-lg transition-colors text-lg font-semibold ${copied
-                            ? 'bg-green-600 text-white'
-                            : 'bg-blue-600 hover:bg-blue-700 text-white'
-                            }`}
-                    >
-                        {copied ? '✓ URL kopiert!' : '📋 URL kopieren'}
-                    </button>
-                    <button
-                        onClick={debugHistory}
-                        className="px-6 py-3 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors text-lg font-semibold"
-                    >
-                        🐛 Debug History
-                    </button>
-                </div>
+            <div className="w-full flex justify-center">
+                <canvas
+                    ref={chartRef}
+                    width={800}
+                    height={200}
+                    className="border-2 border-gray-700 rounded-lg max-w-full h-auto"
+                />
             </div>
 
-            {/* History Steps */}
-            {historySteps.length > 0 && (
-                <div className="mt-6 p-4 bg-gray-800 rounded-lg">
-                    <h3 className="text-white font-semibold mb-3">URL History Steps</h3>
-                    <div className="flex flex-wrap gap-2">
-                        {historySteps.map((step, index) => (
-                            <button
-                                key={index}
-                                onClick={() => goToHistoryStep(index)}
-                                className={`px-3 py-2 rounded text-xs font-mono transition-colors ${index === currentStepIndex
-                                    ? 'bg-green-600 text-white'
-                                    : 'bg-gray-700 hover:bg-gray-600 text-gray-300'
-                                    }`}
-                                title={`Step ${index + 1}: ${step}`}
-                            >
-                                {index + 1}
-                            </button>
-                        ))}
-                    </div>
-                    <div className="mt-2 text-xs text-gray-400">
-                        Aktueller Schritt: {currentStepIndex + 1} von {historySteps.length}
-                    </div>
-                </div>
-            )}
+
         </div>
     );
 };
