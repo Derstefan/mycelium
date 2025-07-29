@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import BattleSimulator from "@/src/components/BattleSimulator";
 import { ElementConfig } from "@/src/script/models";
 import { generateRuleSetByIndex, generateRuleSetByIndexExpanding, getIndexFromRuleSet } from "@/src/script/rules";
+import Link from "next/link";
 
 export default function RandomShroomsPage() {
     const [indices, setIndices] = useState<[number, number] | null>(null);
@@ -47,18 +48,18 @@ export default function RandomShroomsPage() {
         <div className="min-h-screen flex flex-col items-center justify-center p-4">
             <h1 className="text-2xl font-bold mb-4">Simulator</h1>
             <div className="mb-4 flex gap-4">
-                <a
+                <Link
                     href="/"
                     className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
                 >
                     Erweiterter Simulator
-                </a>
-                <a
+                </Link >
+                <Link
                     href="/"
                     className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors"
                 >
                     Hilfe
-                </a>
+                </Link >
             </div>
             <BattleSimulator
                 shroomIndex1={indices[0]}

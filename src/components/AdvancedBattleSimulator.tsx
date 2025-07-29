@@ -36,7 +36,6 @@ const AdvancedBattleSimulator: React.FC<AdvancedBattleSimulatorProps> = ({
     const gameRef = useRef<Game | null>(null);
     const viewerRef = useRef<Viewer | null>(null);
 
-    const [counts, setCounts] = useState<number[]>([]);
     const [shroomConfigs, setShroomConfigs] = useState<ShroomConfig[]>(shrooms);
     const [shroomColors, setShroomColors] = useState<string[]>([]);
     const [shroomNames, setShroomNames] = useState<string[]>([]);
@@ -51,7 +50,6 @@ const AdvancedBattleSimulator: React.FC<AdvancedBattleSimulatorProps> = ({
     const [historySteps, setHistorySteps] = useState<string[]>([]);
     const [currentStepIndex, setCurrentStepIndex] = useState(0);
     const [draggedShroom, setDraggedShroom] = useState<number | null>(null);
-    const [mousePosition, setMousePosition] = useState<{ x: number; y: number } | null>(null);
     const [hoveredPixel, setHoveredPixel] = useState<{ x: number; y: number; element: number; shroom: number | null; age: number; triggerSum: number } | null>(null);
 
     const simulationInterval = useRef<NodeJS.Timeout | null>(null);
@@ -152,7 +150,6 @@ const AdvancedBattleSimulator: React.FC<AdvancedBattleSimulatorProps> = ({
         viewerRef.current?.render();
         gameRef.current.count();
         const currentCounts = gameRef.current.sCount;
-        setCounts([...currentCounts]);
 
         // Chart-Daten aktualisieren
         chartData.current = [...chartData.current, [...currentCounts]].slice(-maxDataPoints);
@@ -191,7 +188,6 @@ const AdvancedBattleSimulator: React.FC<AdvancedBattleSimulatorProps> = ({
         const positions: Position[] = shroomConfigs.map(config => ({ x: config.x, y: config.y }));
         gameRef.current.shroomStartValues(positions);
 
-        setCounts(new Array(shroomConfigs.length).fill(0));
         chartData.current = [];
         viewerRef.current?.render();
         gameRef.current.count();
@@ -308,7 +304,6 @@ const AdvancedBattleSimulator: React.FC<AdvancedBattleSimulatorProps> = ({
         if (!coords) return;
 
 
-        setMousePosition(coords);
 
         // Get pixel value for hover info
         const pixelValue = getPixelValue(coords.x, coords.y);
@@ -367,7 +362,6 @@ const AdvancedBattleSimulator: React.FC<AdvancedBattleSimulatorProps> = ({
 
 
     const handleCanvasMouseLeave = () => {
-        setMousePosition(null);
         setHoveredPixel(null);
         if (draggedShroom !== null) {
             updateURL(shroomConfigs, true, true);
@@ -476,7 +470,6 @@ const AdvancedBattleSimulator: React.FC<AdvancedBattleSimulatorProps> = ({
             gameRef.current = newGame;
             viewerRef.current = newViewer;
             chartData.current = [];
-            setCounts(new Array(shroomConfigs.length).fill(0));
         };
 
         initGame();
@@ -522,7 +515,6 @@ const AdvancedBattleSimulator: React.FC<AdvancedBattleSimulatorProps> = ({
             viewerRef.current = new Viewer(newGame, canvasRef.current!);
             viewerRef.current.render();
             gameRef.current.count();
-            setCounts(new Array(shroomConfigs.length).fill(0));
             chartData.current = [];
 
             startSimulation();
