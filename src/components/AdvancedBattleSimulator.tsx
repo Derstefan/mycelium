@@ -407,11 +407,11 @@ const AdvancedBattleSimulator: React.FC<AdvancedBattleSimulatorProps> = ({
         }
     };
 
-    // Handler für diagonale Anordnung
+    // Handler for diagonal arrangement
     const arrangeDiagonal = () => {
         const n = shroomConfigs.length;
-        const minX = 1, maxX = width - 2;
-        const minY = 1, maxY = height - 2;
+        const minX = 15, maxX = width - 16;
+        const minY = 15, maxY = height - 16;
         const newConfigs = shroomConfigs.map((config, i) => ({
             ...config,
             x: Math.max(minX, Math.min(maxX, Math.round((maxX - minX) * (i / (n - 1)) + minX))),
@@ -439,6 +439,19 @@ const AdvancedBattleSimulator: React.FC<AdvancedBattleSimulatorProps> = ({
                 y: Math.max(minY, Math.min(maxY, y))
             };
         });
+        setShroomConfigs(newConfigs);
+        updateURL(newConfigs, true, true);
+    };
+
+    // Handler for random arrangement
+    const arrangeRandom = () => {
+        const minX = 1, maxX = width - 2;
+        const minY = 1, maxY = height - 2;
+        const newConfigs = shroomConfigs.map(config => ({
+            ...config,
+            x: Math.floor(Math.random() * (maxX - minX + 1)) + minX,
+            y: Math.floor(Math.random() * (maxY - minY + 1)) + minY
+        }));
         setShroomConfigs(newConfigs);
         updateURL(newConfigs, true, true);
     };
@@ -758,7 +771,13 @@ const AdvancedBattleSimulator: React.FC<AdvancedBattleSimulatorProps> = ({
                         className="px-3 py-2 text-white bg-purple-800 rounded-lg hover:bg-purple-600 transition-colors text-sm"
                         onClick={arrangeCircle}
                     >
-                        Kreis
+                        Circle
+                    </button>
+                    <button
+                        className="px-3 py-2 text-white bg-orange-800 rounded-lg hover:bg-orange-600 transition-colors text-sm"
+                        onClick={arrangeRandom}
+                    >
+                        Random
                     </button>
                     <button
                         className="px-3 py-2 text-white bg-gray-800 rounded-lg hover:bg-gray-600 transition-colors text-sm"
